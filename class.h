@@ -2,8 +2,8 @@
 #include <math.h>
 #include <Novice.h>
 
-const int kscreenWidth = 800;
-const int kscreenHeight = 800;
+const int kscreenWidth = 1200;
+const int kscreenHeight = 720;
 const int kworldWidth = 1600;
 const int kworldHeight = 800;
 const int kblockSizeX = 32;
@@ -11,7 +11,6 @@ const int kblockSizeY = 32;
 const int kblockQuantityX = (kworldWidth / kblockSizeX);
 const int kblockQuantityY = (kworldHeight / kblockSizeY);
 const float gravity = 0.45f;
-const float gravityInWater = 0.05f;
 
 enum Scene {
 	TITLE,
@@ -48,11 +47,6 @@ enum MapType {
 	Gool
 };
 
-enum FieldType {
-	Normal,
-	Water
-};
-
 struct Vector2 {
 	float x;
 	float y;
@@ -60,8 +54,8 @@ struct Vector2 {
 
 class Object {
 protected:
-	Vector2 position;
-	unsigned int color;
+	Vector2 position; //座標
+	unsigned int color; //色
 
 public:
 	Vector2 GetPosition() {
@@ -74,39 +68,18 @@ public:
 };
 
 class Dynamic : public Object {
-private:
-	Vector2 prePosition;
-	Vector2 vertex[4];
-	Vector2 verocity;
-	Vector2 acceleration;
-	Vector2 additionalVerocity;
-	Vector2 radius;
-	PlayerDirect direct;
-	bool collisionDirect[4];
-	bool isJump[2];
-	bool getDamage;
-	FieldType state;
+protected:
+	Vector2 prePosition; //1F前の座標
+	Vector2 radius; //半径
+	Vector2 vertex[4]; //矩形としての4点
+	Vector2 verocity; //速度
+	Vector2 acceleration; //加速度
+	Vector2 additionalVerocity; //追加加速度
+	bool collisionDirect[4]; //接触判定
 
 public:
-	//コンストラクタ
-	Dynamic() {
-		position = { 48.0f,48.0f };
-		radius = { 12.0f,15.0f };
-		state = Normal;
-		collisionDirect[0] = { false };
-		isJump[0] = { false };
-		getDamage = { false };
-		color = 0xFFFFFFFF;
-		prePosition = {};
-		vertex[0] = {};
-		verocity = {};
-		acceleration = {};
-		additionalVerocity = {};
-		direct = {};
-	}
-
 	//1フレーム前の座標を更新(接触判定に使う)(必ず移動処理の前に)
-	void SetPrePosition(){
+	void SetPrePosition() {
 
 		prePosition = position;
 
@@ -139,26 +112,73 @@ public:
 
 	}
 
+	//接触判定更新
+	void SetCollisionFlag(Direct direct) {
+
+		collisionDirect[direct] = true;
+
+	}
+
+	//接触判定リセット(必ず最後に)
+	void ResetCollision() {
+
+		collisionDirect[Up] = false;
+		collisionDirect[Down] = false;
+		collisionDirect[Left] = false;
+		collisionDirect[Right] = false;
+
+	}
+
+};
+
+class Weapon : public Dynamic {
+private:
+	bool isBodyExist; //本体出現判定
+	bool isBlastDetonation; //爆風出現判定
+	int detonationCount; //起爆判定
+	int calmDownCount; //起爆継続判定
+	Vector2 blastRadius; //爆風半径
+
+public:
+
+
+
+
+
+
+};
+
+class Character : public Dynamic {
+private:
+	PlayerDirect direct; //方向
+	bool isJump[2]; //ジャンプ判定
+
+public:
+	//コンストラクタ
+	Character() {
+		position = {};
+		radius = { 18.0f,24.0f };
+		collisionDirect[0] = { false };
+		isJump[0] = { false };
+		color = 0xFFFFFFFF;
+		prePosition = {};
+		vertex[0] = {};
+		verocity = {};
+		acceleration = {};
+		additionalVerocity = {};
+		direct = {};
+	}
+
 	//移動処理
 	void SetMove(const char inputKey[], const char preInputKey[]) {
 
 		additionalVerocity.y = -9.4f;
 
 		if (inputKey[DIK_LEFT]) {
-			if (state == Normal) {
-				verocity.x = -3.0f;
-			}
-			else if (state == Water) {
-				verocity.x = -2.25f;
-			}
+			verocity.x = -3.0f;
 		}
 		else if (inputKey[DIK_RIGHT]) {
-			if (state == Normal) {
-				verocity.x = 3.0f;
-			}
-			else if (state == Water) {
-				verocity.x = 2.25f;
-			}
+			verocity.x = 3.0f;
 		}
 		else if (!inputKey[DIK_LEFT] && !inputKey[DIK_RIGHT]) {
 			verocity.x = 0.0f;
@@ -166,47 +186,23 @@ public:
 
 		if (verocity.y != 0.0f) {
 			isJump[0] = true;
-		} 
-
-		if (state == Normal) {
-
-			acceleration.y = gravity;
-
-			if (inputKey[DIK_SPACE] && !preInputKey[DIK_SPACE] && !isJump[0]) {
-				verocity.y = additionalVerocity.y;
-				isJump[0] = true;
-			}
-			else if (inputKey[DIK_SPACE] && !preInputKey[DIK_SPACE] && isJump[0] && !isJump[1]) {
-				verocity.y = additionalVerocity.y * 0.8f;
-				isJump[1] = true;
-			}
-
 		}
-		else if (state == Water) {
 
-			acceleration.y = gravityInWater;
+		acceleration.y = gravity;
 
-			if (inputKey[DIK_SPACE] && !preInputKey[DIK_SPACE]) {
-				verocity.y = additionalVerocity.y * 0.275f;
-				isJump[0] = true;
-			}
-
+		if (inputKey[DIK_SPACE] && !preInputKey[DIK_SPACE] && !isJump[0]) {
+			verocity.y = additionalVerocity.y;
+			isJump[0] = true;
+		}
+		else if (inputKey[DIK_SPACE] && !preInputKey[DIK_SPACE] && isJump[0] && !isJump[1]) {
+			verocity.y = additionalVerocity.y * 0.8f;
+			isJump[1] = true;
 		}
 
 		verocity.y += acceleration.y;
 
-		if (state == Normal) {
-			if (verocity.y > 12.0f) {
-				verocity.y = 12.0f;
-			}
-		}
-		else if (state == Water) {
-			if (verocity.y > 1.0f) {
-				verocity.y = 1.0f;
-			}
-			if (verocity.y < -3.0f) {
-				verocity.y = -3.0f;
-			}
+		if (verocity.y > 12.0f) {
+			verocity.y = 12.0f;
 		}
 
 		if (verocity.x > 0.0f) {
@@ -238,20 +234,35 @@ public:
 
 	}
 
-	//接触判定更新
-	void SetCollisionFlag(Direct direct) {
+	//ジャンプリセット
+	void ResetJumpFlag(Direct direct) {
+		verocity.y = 0.0f;
 
-		collisionDirect[direct] = true;
-
-	}
-
-	//フィールド状態更新
-	void SetState(FieldType environment) {
-
-		state = environment;
+		if (direct == Up) {
+			isJump[0] = false;
+			isJump[1] = false;
+		}
 
 	}
 
+	//プレイヤー初期化
+	void ResetPlayer() {
+
+		position.x = 52.0f;
+		position.y = 720.0f;
+		verocity.y = 0.0f;
+		isJump[1] = false;
+
+	}
+
+	///アクセッサ
+
+	Vector2 GetPrePosition() {
+		return prePosition;
+	}
+	Vector2 GetRadius() {
+		return radius;
+	}
 	void PrintCollision() {
 
 		if (collisionDirect[Up]) {
@@ -284,59 +295,15 @@ public:
 
 	}
 
-	//接触判定リセット(必ず最後に)
-	void ResetCollision() {
-
-		collisionDirect[Up] = false;
-		collisionDirect[Down] = false;
-		collisionDirect[Left] = false;
-		collisionDirect[Right] = false;
-
-	}
-
-	//ジャンプリセット
-	void ResetJumpFlag(Direct direct) {
-		verocity.y = 0.0f;
-
-		if (direct == Up) {
-			isJump[0] = false;
-			isJump[1] = false;
-		}
-
-	}
-
-	//プレイヤー初期化
-	void ResetPlayer() {
-
-		position.x = 48.0f;
-		position.y = 48.0f;
-		verocity.y = 0.0f;
-		isJump[1] = false;
-		getDamage = false;
-
-	}
-
-	///アクセッサ
-
-	Vector2 GetPrePosition() {
-		return prePosition;
-	}
-	Vector2 GetRadius() {
-		return radius;
-	}
-	bool GetDamage() {
-		return getDamage;
-	}
-
 };
 
-class Static : public Object {
+class Map : public Object {
 private:
 	int mapChip;
 	Vector2 mapChipPosition;
 
 public:
-	Static(int x, int y, int map) {
+	Map(int x, int y, int map) {
 
 		position = { float(x) * 32.0f,float(y) * 32.0f };
 		mapChipPosition = { float(x),float(y) };
@@ -359,31 +326,12 @@ public:
 
 };
 
-class Field {
-private:
-	Vector2 position[2];
-
-public:
-	Field(float startX, float startY, float endX, float endY) {
-
-		position[0].x = startX;
-		position[0].y = startY;
-		position[1].x = endX;
-		position[1].y = endY;
-
-	}
-	Vector2 GetPosition(int array) {
-		return position[array];
-	}
-
-};
-
 /// <summary>
-/// 接触処理
+/// 接触処理(プレイヤー)
 /// </summary>
 /// <param name="a">動的オブジェクト</param>
 /// <param name="b">静的オブジェクト</param>
-void SetCollision(Dynamic* a, Static* b,bool& goolFrag) {
+void SetPlayerToMapCollision(Character* a, Map* b,bool& goolFrag) {
 
 	if (a->GetPosition().y > b->GetPosition().y - a->GetRadius().y
 		&& a->GetPosition().y < (b->GetPosition().y + kblockSizeY) + a->GetRadius().y
@@ -441,10 +389,10 @@ void SetCollision(Dynamic* a, Static* b,bool& goolFrag) {
 /// <param name="world">ワールド座標</param>
 /// <param name="local">ローカル座標</param>
 /// <param name="scroll">スクロール座標</param>
-void SetScroll(Dynamic* a, Vector2 scrollPoint, Vector2& world, Vector2& local, Vector2& scroll) {
+void SetScroll(Character* a, Vector2 scrollPoint, Vector2& world, Vector2& local, Vector2& scroll) {
 
-	float heightMax = kscreenHeight;
-	float widthMax = kscreenWidth;
+	float heightMax = float(kworldHeight - kscreenHeight);
+	float widthMax = float(kworldWidth - kscreenWidth);
 
 	world.x = a->GetPosition().x;
 	world.y = a->GetPosition().y;
@@ -455,40 +403,25 @@ void SetScroll(Dynamic* a, Vector2 scrollPoint, Vector2& world, Vector2& local, 
 	scroll.x = world.x - scrollPoint.x;
 	scroll.y = world.y - scrollPoint.y;
 
-	if (scroll.x > 0.0f && scroll.x < heightMax) {
+	if (scroll.x > 0.0f && scroll.x < widthMax) {
 		local.x = scrollPoint.x;
 	}
-	if (scroll.y > 0.0f && scroll.y < widthMax) {
+	if (scroll.y > 0.0f && scroll.y < heightMax) {
 		local.y = scrollPoint.y;
 	}
 
 	if (scroll.x < 0.0f) {
 		scroll.x = 0.0f;
 	}
-	if (scroll.x > heightMax) {
-		scroll.x = heightMax;
+	if (scroll.x > widthMax) {
+		scroll.x = widthMax;
 	}
 
 	if (scroll.y < 0.0f) {
 		scroll.y = 0.0f;
 	}
-	if (scroll.y > widthMax) {
-		scroll.y = widthMax;
+	if (scroll.y > heightMax) {
+		scroll.y = heightMax;
 	}
 	return;
-}
-
-void SetField(Dynamic* a, Field* b, FieldType c) {
-
-	if (a->GetPosition().y > b->GetPosition(0).y && a->GetPosition().y < b->GetPosition(1).y && a->GetPosition().x > b->GetPosition(0).x && a->GetPosition().x < b->GetPosition(1).x) {
-
-		if (c == Water){
-			a->SetState(Water);
-		}
-
-	}
-	else {
-		a->SetState(Normal);
-	}
-
 }
