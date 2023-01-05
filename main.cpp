@@ -102,15 +102,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			/// ↓更新処理ここから
 			///
 
-			Player->SetPrePosition();
 			Player->SetVertex();
 
 			Player->SetMove(keys, preKeys);
+
+			Player->SetAttack(keys, preKeys);
 
 			for (i = 0; i < kblockQuantityX; i++) {
 				for (j = 0; j < kblockQuantityY; j++) {
 
 					SetPlayerToMapCollision(Player, MapInfo[j][i], isGool);
+
+					SetWeaponToMapCollision(Player->GetWeapon(), MapInfo[j][i]);
 
 				}
 			}
@@ -135,6 +138,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			Novice::DrawEllipse(int(local.x), int(local.y), int(Player->GetRadius().x), int(Player->GetRadius().y), 0.0f, 0xFFFFFFFF, kFillModeSolid);
 
+			if (!Player->GetWeapon()->GetBlastDetonation()) {
+				Novice::DrawEllipse(int(-scroll.x + Player->GetWeapon()->GetPosition().x), int(-scroll.y + Player->GetWeapon()->GetPosition().y),
+					int(Player->GetWeapon()->GetRadius().x), int(Player->GetWeapon()->GetRadius().y), 0.0f, 0xFFFFFFFF, kFillModeSolid);
+			}
+			else if (Player->GetWeapon()->GetBlastDetonation()) {
+				Novice::DrawEllipse(int(-scroll.x + Player->GetWeapon()->GetPosition().x), int(-scroll.y + Player->GetWeapon()->GetPosition().y),
+					int(Player->GetWeapon()->GetBlastRadius().x), int(Player->GetWeapon()->GetBlastRadius().y), 0.0f, 0xFFFFFF70, kFillModeSolid);
+			}
+
 			for (i = 0; i < kblockQuantityX; i++) {
 				for (j = 0; j < kblockQuantityY; j++) {
 
@@ -149,9 +161,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				}
 			}
-
-			Novice::ScreenPrintf(0, 0, "%.4f", scroll.x);
-			Novice::ScreenPrintf(0, 20, "%.4f", scroll.y);
 
 			///
 			/// ↑描画処理ここまで
