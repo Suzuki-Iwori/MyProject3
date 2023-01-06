@@ -1,6 +1,7 @@
 #pragma once
-#include <math.h>
 #include <Novice.h>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 const int kscreenWidth = 1200;
 const int kscreenHeight = 720;
@@ -44,6 +45,7 @@ enum PlayerDirect {
 enum MapType {
 	None,
 	Block,
+	Fragile,
 	Gool
 };
 
@@ -58,12 +60,62 @@ protected:
 	unsigned int color; //色
 
 public:
+	//座標の更新
+	void SetPosition(float setX, float setY) {
+		position.x = setX;
+		position.y = setY;
+	}
+	void SetPosition(Vector2 setPosition) {
+		position = setPosition;
+	}
+
 	///アクセッサ
 	Vector2 GetPosition() {
 		return position;
 	}
 	unsigned int GetColor() {
 		return color;
+	}
+
+};
+
+class Blast : public Object {
+private:
+	bool isBlastDetonation; //爆風出現判定
+	int calmDownCount; //起爆継続カウント
+	float blastRadius; //爆風半径
+
+public:
+	Blast(float setBlastRadius) {
+		position = { -200.0f,-200.0f };
+		color = 0xFFFFFF70;
+		isBlastDetonation = false;
+		calmDownCount = 0;
+		blastRadius = setBlastRadius;
+	}
+
+	void ResetBlast() {
+		isBlastDetonation = false;
+		calmDownCount = 0;
+		SetPosition(-200.0f, -200.0f);
+	}
+	void SetBlast(Vector2 setPosition) {
+		SetPosition(setPosition);
+		isBlastDetonation = true;
+	}
+	void SetBlastDetonation(int resetCount) {
+		calmDownCount++;
+
+		if (calmDownCount >= resetCount) {
+			ResetBlast();
+		}
+
+	}
+	bool GetBlastDetonation() {
+		return isBlastDetonation;
+	}
+	float GetBlastRadius() {
+		return blastRadius;
 	}
 
 };
@@ -83,12 +135,6 @@ public:
 
 		prePosition = position;
 
-	}
-
-	//座標の更新
-	void SetPosition(float setX, float setY) {
-			position.x = setX;
-			position.y = setY;
 	}
 
 	//矩形として4点の座標を取得
@@ -138,24 +184,22 @@ public:
 class Weapon : public Dynamic {
 private:
 	bool isBodyExist; //本体出現判定
-	bool isBlastDetonation; //爆風出現判定
 	int detonationCount; //起爆カウント
-	int calmDownCount; //起爆継続カウント
-	Vector2 blastRadius; //爆風半径
+	Blast* weaponBlast; //爆風
 
 public:
 	Weapon() {
 		prePosition = {};
 		radius = { 12.0f,12.0f };
-		blastRadius = { 108.0f,108.0f };
 		vertex[0] = {};
 		verocity = { 0.0f };
 		acceleration = { 0.0f };
 		collisionDirect[0] = { false };
 		isBodyExist = false;
-		isBlastDetonation = false;
 		detonationCount = 0;
-		calmDownCount = 0;
+
+		weaponBlast = new Blast(108.0f);
+
 	}
 
 	void ResetWeapon() {
@@ -163,9 +207,7 @@ public:
 		position.x = -200.0f;
 		position.y = -200.0f;
 		isBodyExist = false;
-		isBlastDetonation = false;
 		detonationCount = 0;
-		calmDownCount = 0;
 
 	}
 
@@ -174,10 +216,10 @@ public:
 		verocity.y = -12.6f;
 
 		if (weaponDirect == PlayerLeft || weaponDirect == PlayerLeftUp) {
-			verocity.x = -4.8f;
+			verocity.x = -4.2f;
 		}
 		else if (weaponDirect == PlayerRight || weaponDirect == PlayerRightUp) {
-			verocity.x = 4.8f;
+			verocity.x = 4.2f;
 		}
 
 		isBodyExist = true;
@@ -186,7 +228,7 @@ public:
 
 	void SetMoveWeapon() {
 
-		if (!isBlastDetonation) {
+		if (!weaponBlast->GetBlastDetonation()) {
 
 			detonationCount++;
 
@@ -211,15 +253,15 @@ public:
 			position.y += verocity.y;
 
 			if (detonationCount >= 120) {
-				isBlastDetonation = true;
+				weaponBlast->SetBlast(position);
 			}
 
 		}
-		else if (isBlastDetonation) {
+		else {
 
-			calmDownCount++;
+			weaponBlast->SetBlastDetonation(45);
 
-			if (calmDownCount >= 45) {
+			if (!weaponBlast->GetBlastDetonation()) {
 				ResetWeapon();
 			}
 
@@ -240,11 +282,8 @@ public:
 	bool GetBodyExist() {
 		return isBodyExist;
 	}
-	bool GetBlastDetonation() {
-		return isBlastDetonation;
-	}
-	Vector2 GetBlastRadius() {
-		return blastRadius;
+	Blast* GetWeaponBlast() {
+		return weaponBlast;
 	}
 
 };
@@ -421,6 +460,12 @@ public:
 
 };
 
+class Enemy : public Dynamic {
+	bool isExist;
+
+
+};
+
 class Map : public Object {
 private:
 	int mapChip;
@@ -439,6 +484,9 @@ public:
 		else if (mapChip == Block) {
 			color = 0x787878FF;
 		}
+		else if (mapChip == Fragile) {
+			color = 0xFF00FFFF;
+		}
 		else if (mapChip == Gool) {
 			color = 0xFFFF0070;
 		}
@@ -447,13 +495,31 @@ public:
 	int GetMapChip() {
 		return mapChip;
 	}
+	void ChangeMapChip(int map) {
+
+		mapChip = map;
+
+		if (mapChip == None) {
+			color = 0x00000000;
+		}
+		else if (mapChip == Block) {
+			color = 0x787878FF;
+		}
+		else if (mapChip == Fragile) {
+			color = 0xFF00FFFF;
+		}
+		else if (mapChip == Gool) {
+			color = 0xFFFF0070;
+		}
+
+	}
 
 };
 
 /// <summary>
 /// 接触処理(プレイヤー)
 /// </summary>
-/// <param name="a">プレーヤーオブジェクト</param>
+/// <param name="a">プレイヤーオブジェクト</param>
 /// <param name="b">静的オブジェクト</param>
 void SetPlayerToMapCollision(Character* a, Map* b,bool& goolFrag) {
 
@@ -462,7 +528,7 @@ void SetPlayerToMapCollision(Character* a, Map* b,bool& goolFrag) {
 		&& a->GetPosition().x > b->GetPosition().x - a->GetRadius().x
 		&& a->GetPosition().x < (b->GetPosition().x + kblockSizeX) + a->GetRadius().x) {
 
-		if (b->GetMapChip() == Block) {
+		if (b->GetMapChip() == Block || b->GetMapChip() == Fragile) {
 			if (a->GetPrePosition().y <= b->GetPosition().y - a->GetRadius().y) {
 
 				a->SetPosition(a->GetPosition().x, b->GetPosition().y - a->GetRadius().y);
@@ -506,7 +572,28 @@ void SetPlayerToMapCollision(Character* a, Map* b,bool& goolFrag) {
 }
 
 /// <summary>
-/// 接触処理(プレイヤー)
+/// 接触処理(爆風->壊せるブロック)
+/// </summary>
+/// <param name="a">プレイヤーオブジェクト</param>
+/// <param name="b">静的オブジェクト</param>
+void SetBlastToFragileCollision(Blast* a, Map* b) {
+	float length = sqrtf((b->GetPosition().x + (kblockSizeX / 2.0f) - a->GetPosition().x) * (b->GetPosition().x + (kblockSizeX / 2.0f) - a->GetPosition().x) +
+		(b->GetPosition().y + (kblockSizeY / 2.0f) - a->GetPosition().y) * (b->GetPosition().y + (kblockSizeY / 2.0f) - a->GetPosition().y));
+
+	if (b->GetMapChip() == Fragile) {
+
+		if (a->GetBlastDetonation() && length <= a->GetBlastRadius() + (kblockSizeX / 2.0f)) {
+
+			b->ChangeMapChip(None);
+
+		}
+
+	}
+
+}
+
+/// <summary>
+/// 接触処理(ウェポン)
 /// </summary>
 /// <param name="a">ウェポンオブジェクト</param>
 /// <param name="b">静的オブジェクト</param>
@@ -517,7 +604,7 @@ void SetWeaponToMapCollision(Weapon* a, Map* b) {
 		&& a->GetPosition().x > b->GetPosition().x - a->GetRadius().x
 		&& a->GetPosition().x < (b->GetPosition().x + kblockSizeX) + a->GetRadius().x) {
 
-		if (b->GetMapChip() == Block) {
+		if (b->GetMapChip() == Block || b->GetMapChip() == Fragile) {
 			if (a->GetPrePosition().y <= b->GetPosition().y - a->GetRadius().y) {
 
 				a->SetPosition(a->GetPosition().x, b->GetPosition().y - a->GetRadius().y);
@@ -556,6 +643,8 @@ void SetWeaponToMapCollision(Weapon* a, Map* b) {
 		}
 
 	}
+
+	SetBlastToFragileCollision(a->GetWeaponBlast(), b);
 
 }
 
@@ -601,5 +690,6 @@ void SetScroll(Character* a, Vector2 scrollPoint, Vector2& world, Vector2& local
 	if (scroll.y > heightMax) {
 		scroll.y = heightMax;
 	}
+
 	return;
 }
