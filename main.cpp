@@ -1,7 +1,8 @@
 ﻿#include <Novice.h>
 #include "class.h"
+#include "system.h"
 
-const char kWindowTitle[] = "トライ2Dアクション";
+const char kWindowTitle[] = "マインスイーパー";
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -48,6 +49,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Character* Player = new Character;
 
+	Enemy* Dust = new Enemy;
+
 	Map* MapInfo[kblockQuantityY][kblockQuantityX]{};
 
 	for (i = 0; i < kblockQuantityX; i++) {
@@ -87,7 +90,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		case LOADING:
 
-			Player->ResetPlayer();
+			for (i = 0; i < kblockQuantityX; i++) {
+				for (j = 0; j < kblockQuantityY; j++) {
+
+					MapInfo[j][i]->SetMapChip(map[j][i]);
+
+				}
+			}
+
+			Player->ResetPlayer(52.0f,720.0f);
+			Dust->SetEnemy(870.0f, 360.0f, 18.0f, Enemy_NotMove);
+
 			isGool = false;
 
 			Novice::DrawBox(0, 0, kscreenWidth, kscreenHeight, 0.0f, 0x000000FF, kFillModeSolid);
@@ -106,19 +119,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			Player->SetMove(keys, preKeys);
 
-			Player->SetAttack(keys, preKeys);
+			Dust->MoveEnemy(Player);
+
+			SetBlastToEnemyCollision(Player->GetWeapon()->GetWeaponBlast(), Dust);
 
 			for (i = 0; i < kblockQuantityX; i++) {
 				for (j = 0; j < kblockQuantityY; j++) {
 
 					SetPlayerToMapCollision(Player, MapInfo[j][i], isGool);
-
-					SetWeaponToMapCollision(Player->GetWeapon(), MapInfo[j][i]);
+					SetBlastToFragileCollision(Dust->GetEnemyBlast(), MapInfo[j][i]);
 
 				}
 			}
 
-			if (isGool) {
+			if (isGool && keys[DIK_UP]) {
 				scene = GAMECLEAR;
 			}
 
@@ -147,13 +161,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					int(Player->GetWeapon()->GetWeaponBlast()->GetBlastRadius()), int(Player->GetWeapon()->GetWeaponBlast()->GetBlastRadius()), 0.0f, 0xFFFFFF70, kFillModeSolid);
 			}
 
+			if (!Dust->GetEnemyBlast()->GetBlastDetonation()) {
+				Novice::DrawEllipse(int(-scroll.x + Dust->GetPosition().x), int(-scroll.y + Dust->GetPosition().y),
+					int(Dust->GetEnemyRadius()), int(Dust->GetEnemyRadius()), 0.0f, 0xFF0000FF, kFillModeSolid);
+			}
+			else {
+				Novice::DrawEllipse(int(-scroll.x + Dust->GetEnemyBlast()->GetPosition().x), int(-scroll.y + Dust->GetEnemyBlast()->GetPosition().y),
+					int(Dust->GetEnemyBlast()->GetBlastRadius()), int(Dust->GetEnemyBlast()->GetBlastRadius()), 0.0f, 0xFFFFFF70, kFillModeSolid);
+			}
 
 			for (i = 0; i < kblockQuantityX; i++) {
 				for (j = 0; j < kblockQuantityY; j++) {
 
 					if (-scroll.x + MapInfo[j][i]->GetPosition().x > -32.0f && -scroll.x + MapInfo[j][i]->GetPosition().x < kscreenWidth + 32.0f
 						&& -scroll.y + MapInfo[j][i]->GetPosition().y > -32.0f && -scroll.y + MapInfo[j][i]->GetPosition().y < kscreenHeight + 32.0f) {
-						if (map[j][i] != None) {
+						if (map[j][i] != Map_None) {
 
 							Novice::DrawBox(int(-scroll.x + MapInfo[j][i]->GetPosition().x), int(-scroll.y + MapInfo[j][i]->GetPosition().y), kblockSizeX, kblockSizeY, 0.0f, MapInfo[j][i]->GetColor(), kFillModeSolid);
 
@@ -197,6 +219,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	}
 
 	delete Player;
+	delete Dust;
 
 	for (i = 0; i < kblockQuantityX; i++) {
 		for (j = 0; j < kblockQuantityY; j++) {

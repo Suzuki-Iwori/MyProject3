@@ -2,6 +2,7 @@
 #include <Novice.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include "system.h"
 
 const int kscreenWidth = 1200;
 const int kscreenHeight = 720;
@@ -29,24 +30,30 @@ enum Vertex {
 };
 
 enum Direct {
-	Up,
-	Left,
-	Down,
-	Right
+	Direct_Up,
+	Direct_Left,
+	Direct_Down,
+	Direct_Right
 };
 
 enum PlayerDirect {
-	PlayerLeft,
-	PlayerRight,
-	PlayerLeftUp,
-	PlayerRightUp
+	Player_Left,
+	Player_Right,
+	Player_LeftUp,
+	Player_RightUp
 };
 
 enum MapType {
-	None,
-	Block,
-	Fragile,
-	Gool
+	Map_None,
+	Map_Block,
+	Map_Fragile,
+	Map_Gool
+};
+
+enum EnemyType {
+	Enemy_NotMove,
+	Enemy_RandomMove,
+	Enemy_ApproachingMove
 };
 
 struct Vector2 {
@@ -61,11 +68,11 @@ protected:
 
 public:
 	//座標の更新
-	void SetPosition(float setX, float setY) {
+	void SetPosition(const float &setX, const float &setY) {
 		position.x = setX;
 		position.y = setY;
 	}
-	void SetPosition(Vector2 setPosition) {
+	void SetPosition(const Vector2 &setPosition) {
 		position = setPosition;
 	}
 
@@ -99,14 +106,14 @@ public:
 		calmDownCount = 0;
 		SetPosition(-200.0f, -200.0f);
 	}
-	void SetBlast(Vector2 setPosition) {
+	void SetBlast(const Vector2 &setPosition) {
 		SetPosition(setPosition);
 		isBlastDetonation = true;
 	}
-	void SetBlastDetonation(int resetCount) {
+	void SetBlastDetonation() {
 		calmDownCount++;
 
-		if (calmDownCount >= resetCount) {
+		if (calmDownCount >= 45) {
 			ResetBlast();
 		}
 
@@ -164,10 +171,10 @@ public:
 	//接触判定リセット(必ず最後に)
 	void ResetCollision() {
 
-		collisionDirect[Up] = false;
-		collisionDirect[Down] = false;
-		collisionDirect[Left] = false;
-		collisionDirect[Right] = false;
+		collisionDirect[Direct_Up] = false;
+		collisionDirect[Direct_Down] = false;
+		collisionDirect[Direct_Left] = false;
+		collisionDirect[Direct_Right] = false;
 
 	}
 
@@ -211,14 +218,14 @@ public:
 
 	}
 
-	void SetThrowWeapon(Vector2 weaponPosition, PlayerDirect weaponDirect) {
+	void SetThrowWeapon(const Vector2 &weaponPosition, const PlayerDirect &weaponDirect) {
 		position = weaponPosition;
 		verocity.y = -12.6f;
 
-		if (weaponDirect == PlayerLeft || weaponDirect == PlayerLeftUp) {
+		if (weaponDirect == Player_Left || weaponDirect == Player_LeftUp) {
 			verocity.x = -4.2f;
 		}
-		else if (weaponDirect == PlayerRight || weaponDirect == PlayerRightUp) {
+		else if (weaponDirect == Player_Right || weaponDirect == Player_RightUp) {
 			verocity.x = 4.2f;
 		}
 
@@ -259,7 +266,7 @@ public:
 		}
 		else {
 
-			weaponBlast->SetBlastDetonation(45);
+			weaponBlast->SetBlastDetonation();
 
 			if (!weaponBlast->GetBlastDetonation()) {
 				ResetWeapon();
@@ -269,11 +276,11 @@ public:
 
 	}
 
-	void SetCollisionVerocity(Direct direct) {
-		if (direct == Up || direct == Down) {
+	void SetCollisionVerocity(const Direct &direct) {
+		if (direct == Direct_Up || direct == Direct_Down) {
 			verocity.y = 0.0f;
 		}
-		if (direct == Left || direct == Right) {
+		if (direct == Direct_Left || direct == Direct_Right) {
 			verocity.x *= -1.0f;
 		}
 	}
@@ -284,6 +291,10 @@ public:
 	}
 	Blast* GetWeaponBlast() {
 		return weaponBlast;
+	}
+
+	~Weapon() {
+		delete weaponBlast;
 	}
 
 };
@@ -311,6 +322,22 @@ public:
 		direct = {};
 
 		playerWeapon = new Weapon;
+
+	}
+
+	//攻撃処理
+	void SetAttack(const char inputKey[], const char preInputKey[]) {
+
+		playerWeapon->SetPrePosition();
+
+		if (inputKey[DIK_Z] && !preInputKey[DIK_Z] && !playerWeapon->GetBodyExist()) {
+
+			playerWeapon->SetThrowWeapon(position, direct);
+
+		}
+		if (playerWeapon->GetBodyExist()) {
+			playerWeapon->SetMoveWeapon();
+		}
 
 	}
 
@@ -353,46 +380,32 @@ public:
 		}
 
 		if (verocity.x > 0.0f) {
-			direct = PlayerRight;
+			direct = Player_Right;
 		}
 		else if (verocity.x < 0.0f) {
-			direct = PlayerLeft;
+			direct = Player_Left;
 		}
 		if (verocity.y < 0.0f) {
-			if (direct == PlayerLeft) {
-				direct = PlayerLeftUp;
+			if (direct == Player_Left) {
+				direct = Player_LeftUp;
 			}
-			else if (direct == PlayerRight) {
-				direct = PlayerRightUp;
+			else if (direct == Player_Right) {
+				direct = Player_RightUp;
 			}
 		}
 		if (verocity.y >= 0.0f) {
-			if (direct == PlayerLeftUp) {
-				direct = PlayerLeft;
+			if (direct == Player_LeftUp) {
+				direct = Player_Left;
 			}
-			else if (direct == PlayerRightUp) {
-				direct = PlayerRight;
+			else if (direct == Player_RightUp) {
+				direct = Player_Right;
 			}
 		}
 
 		position.x += verocity.x;
 		position.y += verocity.y;
 
-	}
-
-	//攻撃処理
-	void SetAttack(const char inputKey[], const char preInputKey[]) {
-
-		playerWeapon->SetPrePosition();
-
-		if (inputKey[DIK_Z] && !preInputKey[DIK_Z] && !playerWeapon->GetBodyExist()) {
-
-			playerWeapon->SetThrowWeapon(position, direct);
-
-		}
-		if (playerWeapon->GetBodyExist()) {
-			playerWeapon->SetMoveWeapon();
-		}
+		SetAttack(inputKey, preInputKey);
 
 	}
 
@@ -400,7 +413,7 @@ public:
 	void ResetJumpFlag(Direct direct) {
 		verocity.y = 0.0f;
 
-		if (direct == Up) {
+		if (direct == Direct_Up) {
 			isJump[0] = false;
 			isJump[1] = false;
 		}
@@ -408,12 +421,15 @@ public:
 	}
 
 	//プレイヤー初期化
-	void ResetPlayer() {
+	void ResetPlayer(float setX, float setY) {
 
-		position.x = 52.0f;
-		position.y = 720.0f;
+		position.x = setX;
+		position.y = setY;
 		verocity.y = 0.0f;
 		isJump[1] = false;
+
+		playerWeapon->ResetWeapon();
+		playerWeapon->GetWeaponBlast()->ResetBlast();
 
 	}
 
@@ -424,31 +440,31 @@ public:
 	}
 	void PrintCollision() {
 
-		if (collisionDirect[Up]) {
+		if (collisionDirect[Direct_Up]) {
 			Novice::ScreenPrintf(0, 0, "1");
 		}
-		else if (!collisionDirect[Up]) {
+		else if (!collisionDirect[Direct_Up]) {
 			Novice::ScreenPrintf(0, 0, "0");
 		}
 
-		if (collisionDirect[Down]) {
+		if (collisionDirect[Direct_Down]) {
 			Novice::ScreenPrintf(0, 20, "1");
 		}
-		else if (!collisionDirect[Down]) {
+		else if (!collisionDirect[Direct_Down]) {
 			Novice::ScreenPrintf(0, 20, "0");
 		}
 
-		if (collisionDirect[Left]) {
+		if (collisionDirect[Direct_Left]) {
 			Novice::ScreenPrintf(0, 40, "1");
 		}
-		else if (!collisionDirect[Left]) {
+		else if (!collisionDirect[Direct_Left]) {
 			Novice::ScreenPrintf(0, 40, "0");
 		}
 
-		if (collisionDirect[Right]) {
+		if (collisionDirect[Direct_Right]) {
 			Novice::ScreenPrintf(0, 60, "1");
 		}
-		else if (!collisionDirect[Right]) {
+		else if (!collisionDirect[Direct_Right]) {
 			Novice::ScreenPrintf(0, 60, "0");
 		}
 
@@ -460,9 +476,72 @@ public:
 
 };
 
-class Enemy : public Dynamic {
-	bool isExist;
+class Enemy : public Object {
+private:
+	EnemyType MovingType; //行動タイプ
+	bool isExist; //存在フラグ
+	float enemyRadius; //半径
+	Vector2 verocity; //速度
+	Blast* enemyBlast; //爆風
 
+public:
+	Enemy() {
+		position = { -200.0f,-200.0f };
+		color = 0xFF0000FF;
+		MovingType = Enemy_NotMove;
+		isExist = false;
+		enemyRadius = 0;
+		verocity = { 0.0f,0.0f };
+
+		enemyBlast = new Blast(92.0f);
+
+	}
+
+	void SetEnemy(const float &setX, const float &setY, const float &setRadius, const EnemyType &setEnemyType) {
+		SetPosition(setX, setY);
+		enemyRadius = setRadius;
+		MovingType = setEnemyType;
+		isExist = true;
+		enemyBlast->ResetBlast();
+	}
+
+	void DefeatEnemy() {
+		SetPosition(-200.0f, -200.0f);
+		verocity = { 0.0f,0.0f };
+		isExist = false;
+	}
+
+	void MoveEnemy(Character* getPlayer) {
+		if (!enemyBlast->GetBlastDetonation()) {
+
+			position.x += verocity.x;
+			position.y += verocity.y;
+
+		}
+		else {
+
+			enemyBlast->SetBlastDetonation();
+
+			if (!enemyBlast->GetBlastDetonation()) {
+				DefeatEnemy();
+			}
+
+		}
+
+	}
+
+	bool GetExist() {
+		return isExist;
+	}
+	float GetEnemyRadius() {
+		return enemyRadius;
+	}
+	Blast* GetEnemyBlast() {
+		return enemyBlast;
+	}
+	~Enemy() {
+		delete enemyBlast;
+	}
 
 };
 
@@ -478,16 +557,16 @@ public:
 		mapChipPosition = { float(x),float(y) };
 		mapChip = map;
 
-		if (mapChip == None) {
+		if (mapChip == Map_None) {
 			color = 0x00000000;
 		}
-		else if (mapChip == Block) {
+		else if (mapChip == Map_Block) {
 			color = 0x787878FF;
 		}
-		else if (mapChip == Fragile) {
+		else if (mapChip == Map_Fragile) {
 			color = 0xFF00FFFF;
 		}
-		else if (mapChip == Gool) {
+		else if (mapChip == Map_Gool) {
 			color = 0xFFFF0070;
 		}
 
@@ -495,26 +574,120 @@ public:
 	int GetMapChip() {
 		return mapChip;
 	}
-	void ChangeMapChip(int map) {
+	void SetMapChip(int map) {
 
 		mapChip = map;
 
-		if (mapChip == None) {
+		if (mapChip == Map_None) {
 			color = 0x00000000;
 		}
-		else if (mapChip == Block) {
+		else if (mapChip == Map_Block) {
 			color = 0x787878FF;
 		}
-		else if (mapChip == Fragile) {
+		else if (mapChip == Map_Fragile) {
 			color = 0xFF00FFFF;
 		}
-		else if (mapChip == Gool) {
+		else if (mapChip == Map_Gool) {
 			color = 0xFFFF0070;
 		}
 
 	}
 
 };
+
+/// <summary>
+/// 接触処理(爆風->エネミー)
+/// </summary>
+/// <param name="a">プレイヤーオブジェクト</param>
+/// <param name="b">エネミーオブジェクト</param>
+void SetBlastToEnemyCollision(Blast* a, Enemy* b) {
+	float length = sqrtf((b->GetPosition().x - a->GetPosition().x) * (b->GetPosition().x - a->GetPosition().x) +
+		(b->GetPosition().y - a->GetPosition().y) * (b->GetPosition().y - a->GetPosition().y));
+
+	if (a->GetBlastDetonation() && !b->GetEnemyBlast()->GetBlastDetonation() && length <= a->GetBlastRadius() + b->GetEnemyRadius()) {
+
+		b->GetEnemyBlast()->SetBlast(b->GetPosition());
+
+	}
+
+}
+
+/// <summary>
+/// 接触処理(爆風->壊せるブロック)
+/// </summary>
+/// <param name="a">プレイヤーオブジェクト</param>
+/// <param name="b">マップオブジェクト</param>
+void SetBlastToFragileCollision(Blast* a, Map* b) {
+	float length = sqrtf((b->GetPosition().x + (kblockSizeX / 2.0f) - a->GetPosition().x) * (b->GetPosition().x + (kblockSizeX / 2.0f) - a->GetPosition().x) +
+		(b->GetPosition().y + (kblockSizeY / 2.0f) - a->GetPosition().y) * (b->GetPosition().y + (kblockSizeY / 2.0f) - a->GetPosition().y));
+
+	if (b->GetMapChip() == Map_Fragile) {
+
+		if (a->GetBlastDetonation() && length <= a->GetBlastRadius() + (kblockSizeX / 2.0f)) {
+
+			b->SetMapChip(Map_None);
+
+		}
+
+	}
+
+}
+
+/// <summary>
+/// 接触処理(ウェポン)
+/// </summary>
+/// <param name="a">ウェポンオブジェクト</param>
+/// <param name="b">マップオブジェクト</param>
+void SetWeaponToMapCollision(Weapon* a, Map* b) {
+
+	if (a->GetPosition().y > b->GetPosition().y - a->GetRadius().y
+		&& a->GetPosition().y < (b->GetPosition().y + kblockSizeY) + a->GetRadius().y
+		&& a->GetPosition().x > b->GetPosition().x - a->GetRadius().x
+		&& a->GetPosition().x < (b->GetPosition().x + kblockSizeX) + a->GetRadius().x) {
+
+		if (b->GetMapChip() == Map_Block || b->GetMapChip() == Map_Fragile) {
+			if (a->GetPrePosition().y <= b->GetPosition().y - a->GetRadius().y) {
+
+				a->SetPosition(a->GetPosition().x, b->GetPosition().y - a->GetRadius().y);
+				a->SetCollisionVerocity(Direct_Up);
+				a->SetCollisionFlag(Direct_Up);
+
+			}
+			if (!(a->GetPrePosition().x <= b->GetPosition().x - a->GetRadius().x)
+				&& !(a->GetPrePosition().x >= (b->GetPosition().x + kblockSizeX) + a->GetRadius().x)) {
+				if (a->GetPrePosition().y >= (b->GetPosition().y + kblockSizeY) + a->GetRadius().y) {
+
+					a->SetPosition(a->GetPosition().x, (b->GetPosition().y + kblockSizeY) + a->GetRadius().y);
+					a->SetCollisionVerocity(Direct_Down);
+					a->SetCollisionFlag(Direct_Down);
+
+				}
+			}
+			if (a->GetPrePosition().x <= b->GetPosition().x - a->GetRadius().x) {
+
+				a->SetPosition(b->GetPosition().x - a->GetRadius().x, a->GetPosition().y);
+				a->SetCollisionVerocity(Direct_Right);
+				a->SetCollisionFlag(Direct_Right);
+
+			}
+			if (!(a->GetPrePosition().y <= b->GetPosition().y - a->GetRadius().y)
+				&& !(a->GetPrePosition().y >= (b->GetPosition().y + kblockSizeY) + a->GetRadius().y)) {
+				if (a->GetPrePosition().x >= (b->GetPosition().x + kblockSizeX) + a->GetRadius().x) {
+
+					a->SetPosition((b->GetPosition().x + kblockSizeX) + a->GetRadius().x, a->GetPosition().y);
+					a->SetCollisionVerocity(Direct_Left);
+					a->SetCollisionFlag(Direct_Left);
+
+				}
+			}
+
+		}
+
+	}
+
+	SetBlastToFragileCollision(a->GetWeaponBlast(), b);
+
+}
 
 /// <summary>
 /// 接触処理(プレイヤー)
@@ -528,12 +701,12 @@ void SetPlayerToMapCollision(Character* a, Map* b,bool& goolFrag) {
 		&& a->GetPosition().x > b->GetPosition().x - a->GetRadius().x
 		&& a->GetPosition().x < (b->GetPosition().x + kblockSizeX) + a->GetRadius().x) {
 
-		if (b->GetMapChip() == Block || b->GetMapChip() == Fragile) {
+		if (b->GetMapChip() == Map_Block || b->GetMapChip() == Map_Fragile) {
 			if (a->GetPrePosition().y <= b->GetPosition().y - a->GetRadius().y) {
 
 				a->SetPosition(a->GetPosition().x, b->GetPosition().y - a->GetRadius().y);
-				a->SetCollisionFlag(Up);
-				a->ResetJumpFlag(Up);
+				a->SetCollisionFlag(Direct_Up);
+				a->ResetJumpFlag(Direct_Up);
 
 			}
 			if (!(a->GetPrePosition().x <= b->GetPosition().x - a->GetRadius().x)
@@ -541,15 +714,15 @@ void SetPlayerToMapCollision(Character* a, Map* b,bool& goolFrag) {
 				if (a->GetPrePosition().y >= (b->GetPosition().y + kblockSizeY) + a->GetRadius().y) {
 
 					a->SetPosition(a->GetPosition().x, (b->GetPosition().y + kblockSizeY) + a->GetRadius().y);
-					a->SetCollisionFlag(Down);
-					a->ResetJumpFlag(Down);
+					a->SetCollisionFlag(Direct_Down);
+					a->ResetJumpFlag(Direct_Down);
 
 				}
 			}
 			if (a->GetPrePosition().x <= b->GetPosition().x - a->GetRadius().x) {
 
 				a->SetPosition(b->GetPosition().x - a->GetRadius().x, a->GetPosition().y);
-				a->SetCollisionFlag(Right);
+				a->SetCollisionFlag(Direct_Right);
 
 			}
 			if (!(a->GetPrePosition().y <= b->GetPosition().y - a->GetRadius().y)
@@ -557,94 +730,19 @@ void SetPlayerToMapCollision(Character* a, Map* b,bool& goolFrag) {
 				if (a->GetPrePosition().x >= (b->GetPosition().x + kblockSizeX) + a->GetRadius().x) {
 
 					a->SetPosition((b->GetPosition().x + kblockSizeX) + a->GetRadius().x, a->GetPosition().y);
-					a->SetCollisionFlag(Left);
+					a->SetCollisionFlag(Direct_Left);
 
 				}
 			}
 
 		}
-		else if (b->GetMapChip() == Gool) {
+		else if (b->GetMapChip() == Map_Gool) {
 			goolFrag = true;
 		}
 
 	}
 
-}
-
-/// <summary>
-/// 接触処理(爆風->壊せるブロック)
-/// </summary>
-/// <param name="a">プレイヤーオブジェクト</param>
-/// <param name="b">静的オブジェクト</param>
-void SetBlastToFragileCollision(Blast* a, Map* b) {
-	float length = sqrtf((b->GetPosition().x + (kblockSizeX / 2.0f) - a->GetPosition().x) * (b->GetPosition().x + (kblockSizeX / 2.0f) - a->GetPosition().x) +
-		(b->GetPosition().y + (kblockSizeY / 2.0f) - a->GetPosition().y) * (b->GetPosition().y + (kblockSizeY / 2.0f) - a->GetPosition().y));
-
-	if (b->GetMapChip() == Fragile) {
-
-		if (a->GetBlastDetonation() && length <= a->GetBlastRadius() + (kblockSizeX / 2.0f)) {
-
-			b->ChangeMapChip(None);
-
-		}
-
-	}
-
-}
-
-/// <summary>
-/// 接触処理(ウェポン)
-/// </summary>
-/// <param name="a">ウェポンオブジェクト</param>
-/// <param name="b">静的オブジェクト</param>
-void SetWeaponToMapCollision(Weapon* a, Map* b) {
-
-	if (a->GetPosition().y > b->GetPosition().y - a->GetRadius().y
-		&& a->GetPosition().y < (b->GetPosition().y + kblockSizeY) + a->GetRadius().y
-		&& a->GetPosition().x > b->GetPosition().x - a->GetRadius().x
-		&& a->GetPosition().x < (b->GetPosition().x + kblockSizeX) + a->GetRadius().x) {
-
-		if (b->GetMapChip() == Block || b->GetMapChip() == Fragile) {
-			if (a->GetPrePosition().y <= b->GetPosition().y - a->GetRadius().y) {
-
-				a->SetPosition(a->GetPosition().x, b->GetPosition().y - a->GetRadius().y);
-				a->SetCollisionVerocity(Up);
-				a->SetCollisionFlag(Up);
-
-			}
-			if (!(a->GetPrePosition().x <= b->GetPosition().x - a->GetRadius().x)
-				&& !(a->GetPrePosition().x >= (b->GetPosition().x + kblockSizeX) + a->GetRadius().x)) {
-				if (a->GetPrePosition().y >= (b->GetPosition().y + kblockSizeY) + a->GetRadius().y) {
-
-					a->SetPosition(a->GetPosition().x, (b->GetPosition().y + kblockSizeY) + a->GetRadius().y);
-					a->SetCollisionVerocity(Down);
-					a->SetCollisionFlag(Down);
-
-				}
-			}
-			if (a->GetPrePosition().x <= b->GetPosition().x - a->GetRadius().x) {
-
-				a->SetPosition(b->GetPosition().x - a->GetRadius().x, a->GetPosition().y);
-				a->SetCollisionVerocity(Right);
-				a->SetCollisionFlag(Right);
-
-			}
-			if (!(a->GetPrePosition().y <= b->GetPosition().y - a->GetRadius().y)
-				&& !(a->GetPrePosition().y >= (b->GetPosition().y + kblockSizeY) + a->GetRadius().y)) {
-				if (a->GetPrePosition().x >= (b->GetPosition().x + kblockSizeX) + a->GetRadius().x) {
-
-					a->SetPosition((b->GetPosition().x + kblockSizeX) + a->GetRadius().x, a->GetPosition().y);
-					a->SetCollisionVerocity(Left);
-					a->SetCollisionFlag(Left);
-
-				}
-			}
-
-		}
-
-	}
-
-	SetBlastToFragileCollision(a->GetWeaponBlast(), b);
+	SetWeaponToMapCollision(a->GetWeapon(), b);
 
 }
 
