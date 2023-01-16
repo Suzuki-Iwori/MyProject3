@@ -1,5 +1,5 @@
 ﻿#include <Novice.h>
-#include "class.h"
+#include "object.h"
 #include "system.h"
 
 const char kWindowTitle[] = "マインスイーパー";
@@ -14,8 +14,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = {0};
 	char preKeys[256] = {0};
 
+	srand(unsigned int(time(nullptr)));
+
 	int i;
 	int j;
+	int k;
 
 	int map[kblockQuantityY][kblockQuantityX] = {
 
@@ -49,7 +52,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Character* Player = new Character;
 
-	Enemy* Dust = new Enemy;
+	Enemy* Dust[kenemyNum]{};
+
+	for (i = 0; i < kenemyNum; i++) {
+		Dust[i] = new Enemy;
+	}
 
 	Map* MapInfo[kblockQuantityY][kblockQuantityX]{};
 
@@ -66,7 +73,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector2 local{};
 	Vector2 scroll{};
 
-	Scene scene = TITLE;
+	Scene scene = Scene_Title;
 
 	bool isGool = false;
 
@@ -80,15 +87,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Novice::GetHitKeyStateAll(keys);
 
 		switch (scene) {
-		case TITLE:
+		case Scene_Title:
 
 			if (keys[DIK_SPACE] && !preKeys[DIK_SPACE]) {
-				scene = LOADING;
+				scene = Scene_Loading;
 			}
 
 			break;
 
-		case LOADING:
+		case Scene_Loading:
 
 			for (i = 0; i < kblockQuantityX; i++) {
 				for (j = 0; j < kblockQuantityY; j++) {
@@ -98,18 +105,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 			}
 
-			Player->ResetPlayer(52.0f,720.0f);
-			Dust->SetEnemy(870.0f, 360.0f, 18.0f, Enemy_NotMove);
+			Player->ResetPlayer(722.0f,168.0f);
+
+			for (i = 0; i < kenemyNum; i++) {
+				Dust[i]->SetEnemy(float(SetRandom(0, kworldWidth)), float(SetRandom(0, kworldHeight)), 18.0f);
+			}
 
 			isGool = false;
 
 			Novice::DrawBox(0, 0, kscreenWidth, kscreenHeight, 0.0f, 0x000000FF, kFillModeSolid);
 
-			scene = PLAYING;
+			scene = Scene_Stage1;
 
 			break;
 
-		case PLAYING:
+		case Scene_Stage1:
 
 			///
 			/// ↓更新処理ここから
@@ -119,21 +129,32 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			Player->SetMove(keys, preKeys);
 
-			Dust->MoveEnemy(Player);
+			for (i = 0; i < kenemyNum; i++) {
+				Dust[i]->MoveEnemy(Player);
+				SetBlastToEnemyCollision(Player->GetWeapon()->GetWeaponBlast(), Dust[i]);
+			}
 
-			SetBlastToEnemyCollision(Player->GetWeapon()->GetWeaponBlast(), Dust);
+			for (i = 0; i < kenemyNum; i++) {
+				for (j = 0; j < kenemyNum; j++) {
+					if (i != j) {
+						SetBlastToEnemyCollision(Dust[i]->GetEnemyBlast(), Dust[j]);
+					}
+				}
+			}
 
 			for (i = 0; i < kblockQuantityX; i++) {
 				for (j = 0; j < kblockQuantityY; j++) {
 
 					SetPlayerToMapCollision(Player, MapInfo[j][i], isGool);
-					SetBlastToFragileCollision(Dust->GetEnemyBlast(), MapInfo[j][i]);
+					for (k = 0; k < kenemyNum; k++) {
+						SetBlastToFragileCollision(Dust[k]->GetEnemyBlast(), MapInfo[j][i]);
+					}
 
 				}
 			}
 
-			if (isGool && keys[DIK_UP]) {
-				scene = GAMECLEAR;
+			if (SetClearCount(Dust, MapInfo) && isGool && keys[DIK_UP]) {
+				scene = Scene_GameClear;
 			}
 
 			SetScroll(Player, scrollPoint, world, local, scroll);
@@ -152,24 +173,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			Novice::DrawEllipse(int(local.x), int(local.y), int(Player->GetRadius().x), int(Player->GetRadius().y), 0.0f, 0xFFFFFFFF, kFillModeSolid);
 
-			if (!Player->GetWeapon()->GetWeaponBlast()->GetBlastDetonation()) {
-				Novice::DrawEllipse(int(-scroll.x + Player->GetWeapon()->GetPosition().x), int(-scroll.y + Player->GetWeapon()->GetPosition().y),
-					int(Player->GetWeapon()->GetRadius().x), int(Player->GetWeapon()->GetRadius().y), 0.0f, 0xFFFFFFFF, kFillModeSolid);
-			}
-			else {
-				Novice::DrawEllipse(int(-scroll.x + Player->GetWeapon()->GetWeaponBlast()->GetPosition().x), int(-scroll.y + Player->GetWeapon()->GetWeaponBlast()->GetPosition().y),
-					int(Player->GetWeapon()->GetWeaponBlast()->GetBlastRadius()), int(Player->GetWeapon()->GetWeaponBlast()->GetBlastRadius()), 0.0f, 0xFFFFFF70, kFillModeSolid);
-			}
-
-			if (!Dust->GetEnemyBlast()->GetBlastDetonation()) {
-				Novice::DrawEllipse(int(-scroll.x + Dust->GetPosition().x), int(-scroll.y + Dust->GetPosition().y),
-					int(Dust->GetEnemyRadius()), int(Dust->GetEnemyRadius()), 0.0f, 0xFF0000FF, kFillModeSolid);
-			}
-			else {
-				Novice::DrawEllipse(int(-scroll.x + Dust->GetEnemyBlast()->GetPosition().x), int(-scroll.y + Dust->GetEnemyBlast()->GetPosition().y),
-					int(Dust->GetEnemyBlast()->GetBlastRadius()), int(Dust->GetEnemyBlast()->GetBlastRadius()), 0.0f, 0xFFFFFF70, kFillModeSolid);
-			}
-
 			for (i = 0; i < kblockQuantityX; i++) {
 				for (j = 0; j < kblockQuantityY; j++) {
 
@@ -185,24 +188,44 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 			}
 
+			if (!Player->GetWeapon()->GetWeaponBlast()->GetBlastDetonation()) {
+				Novice::DrawEllipse(int(-scroll.x + Player->GetWeapon()->GetPosition().x), int(-scroll.y + Player->GetWeapon()->GetPosition().y),
+					int(Player->GetWeapon()->GetRadius().x), int(Player->GetWeapon()->GetRadius().y), 0.0f, 0xFFFFFFFF, kFillModeSolid);
+			}
+			else {
+				Novice::DrawEllipse(int(-scroll.x + Player->GetWeapon()->GetWeaponBlast()->GetPosition().x), int(-scroll.y + Player->GetWeapon()->GetWeaponBlast()->GetPosition().y),
+					int(Player->GetWeapon()->GetWeaponBlast()->GetBlastRadius()), int(Player->GetWeapon()->GetWeaponBlast()->GetBlastRadius()), 0.0f, 0xFFFFFF70, kFillModeSolid);
+			}
+
+			for (i = 0; i < kenemyNum; i++) {
+				if (!Dust[i]->GetEnemyBlast()->GetBlastDetonation()) {
+					Novice::DrawEllipse(int(-scroll.x + Dust[i]->GetPosition().x), int(-scroll.y + Dust[i]->GetPosition().y),
+						int(Dust[i]->GetEnemyRadius()), int(Dust[i]->GetEnemyRadius()), 0.0f, 0xFF0000FF, kFillModeSolid);
+				}
+				else {
+					Novice::DrawEllipse(int(-scroll.x + Dust[i]->GetEnemyBlast()->GetPosition().x), int(-scroll.y + Dust[i]->GetEnemyBlast()->GetPosition().y),
+						int(Dust[i]->GetEnemyBlast()->GetBlastRadius()), int(Dust[i]->GetEnemyBlast()->GetBlastRadius()), 0.0f, 0xFFFFFF70, kFillModeSolid);
+				}
+			}
+
 			///
 			/// ↑描画処理ここまで
 			///
 
 			break;
 
-		case GAMECLEAR:
+		case Scene_GameClear:
 
 			if (keys[DIK_SPACE] && !preKeys[DIK_SPACE]) {
-				scene = TITLE;
+				scene = Scene_Title;
 			}
 
 			break;
 
-		case GAMEOVER:
+		case Scene_GameOver:
 
 			if (keys[DIK_SPACE] && !preKeys[DIK_SPACE]) {
-				scene = TITLE;
+				scene = Scene_Title;
 			}
 
 			break;
@@ -219,7 +242,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	}
 
 	delete Player;
-	delete Dust;
+
+	for (i = 0; i < kenemyNum; i++) {
+		delete Dust[i];
+	}
 
 	for (i = 0; i < kblockQuantityX; i++) {
 		for (j = 0; j < kblockQuantityY; j++) {

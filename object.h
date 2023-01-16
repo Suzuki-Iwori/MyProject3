@@ -4,29 +4,24 @@
 #include <math.h>
 #include "system.h"
 
-const int kscreenWidth = 1200;
-const int kscreenHeight = 720;
-const int kworldWidth = 1600;
-const int kworldHeight = 800;
-const int kblockSizeX = 32;
-const int kblockSizeY = 32;
-const int kblockQuantityX = (kworldWidth / kblockSizeX);
-const int kblockQuantityY = (kworldHeight / kblockSizeY);
-const float gravity = 0.45f;
+const int kscreenWidth = 1200; //スクリーン横幅
+const int kscreenHeight = 720; //スクリーン縦幅
+const int kworldWidth = 1600; //ワールド横幅
+const int kworldHeight = 800; //ワールド縦幅
+const int kblockSizeX = 32; //ブロック横幅
+const int kblockSizeY = 32; //ブロック縦幅
+const int kblockQuantityX = (kworldWidth / kblockSizeX); //ブロック横数
+const int kblockQuantityY = (kworldHeight / kblockSizeY); //ブロック縦数
+const float kgravity = 0.45f; //重力
+const int kenemyNum = 16; //エネミーの最大数
+const float kblastRadius = 124.0f;
 
 enum Scene {
-	TITLE,
-	LOADING,
-	PLAYING,
-	GAMECLEAR,
-	GAMEOVER
-};
-
-enum Vertex {
-	LeftTop,
-	RightTop,
-	LeftBottom,
-	RightBottom
+	Scene_Title,
+	Scene_Loading,
+	Scene_Stage1,
+	Scene_GameClear,
+	Scene_GameOver
 };
 
 enum Direct {
@@ -50,15 +45,16 @@ enum MapType {
 	Map_Gool
 };
 
-enum EnemyType {
-	Enemy_NotMove,
-	Enemy_RandomMove,
-	Enemy_ApproachingMove
-};
-
 struct Vector2 {
 	float x;
 	float y;
+};
+
+struct Vertex {
+	Vector2 LeftTop;
+	Vector2	RightTop;
+	Vector2	LeftBottom;
+	Vector2	RightBottom;
 };
 
 class Object {
@@ -67,19 +63,21 @@ protected:
 	unsigned int color; //色
 
 public:
-	//座標の更新
+	//座標の更新(X,Y個別)
 	void SetPosition(const float &setX, const float &setY) {
 		position.x = setX;
 		position.y = setY;
 	}
+	//座標の更新(Vector2一括)
 	void SetPosition(const Vector2 &setPosition) {
 		position = setPosition;
 	}
 
-	///アクセッサ
+	///座標(アクセッサ)
 	Vector2 GetPosition() {
 		return position;
 	}
+	///色(アクセッサ)
 	unsigned int GetColor() {
 		return color;
 	}
@@ -101,26 +99,32 @@ public:
 		blastRadius = setBlastRadius;
 	}
 
+	//爆風の初期化処理
 	void ResetBlast() {
 		isBlastDetonation = false;
 		calmDownCount = 0;
 		SetPosition(-200.0f, -200.0f);
 	}
+	//爆風の発生処理
 	void SetBlast(const Vector2 &setPosition) {
 		SetPosition(setPosition);
 		isBlastDetonation = true;
 	}
+	//爆風の継続処理
 	void SetBlastDetonation() {
 		calmDownCount++;
 
-		if (calmDownCount >= 45) {
+		if (calmDownCount >= 24) {
 			ResetBlast();
 		}
 
 	}
+
+	//爆風出現判定(アクセッサ)
 	bool GetBlastDetonation() {
 		return isBlastDetonation;
 	}
+	//爆風半径(アクセッサ)
 	float GetBlastRadius() {
 		return blastRadius;
 	}
@@ -131,43 +135,40 @@ class Dynamic : public Object {
 protected:
 	Vector2 prePosition; //1F前の座標
 	Vector2 radius; //半径
-	Vector2 vertex[4]; //矩形としての4点
+	Vertex vertex; //矩形としての4点
 	Vector2 verocity; //速度
 	Vector2 acceleration; //加速度
 	bool collisionDirect[4]; //接触判定
 
 public:
-	//1フレーム前の座標を更新(接触判定に使う)(必ず移動処理の前に)
+	//1F前の座標を更新(接触判定に使う)(必ず移動処理の前に)
 	void SetPrePosition() {
 
 		prePosition = position;
 
 	}
-
 	//矩形として4点の座標を取得
 	void SetVertex() {
 
-		vertex[LeftTop].x = position.x - radius.x;
-		vertex[LeftTop].y = position.y - radius.y;
+		vertex.LeftTop.x = position.x - radius.x;
+		vertex.LeftTop.y = position.y - radius.y;
 
-		vertex[RightTop].x = position.x + radius.x - 1;
-		vertex[RightTop].y = position.y - radius.y;
+		vertex.RightTop.x = position.x + radius.x - 1;
+		vertex.RightTop.y = position.y - radius.y;
 
-		vertex[LeftBottom].x = position.x - radius.x;
-		vertex[LeftBottom].y = position.y + radius.y - 1;
+		vertex.LeftBottom.x = position.x - radius.x;
+		vertex.LeftBottom.y = position.y + radius.y - 1;
 
-		vertex[RightBottom].x = position.x + radius.x - 1;
-		vertex[RightBottom].y = position.y + radius.y - 1;
+		vertex.RightBottom.x = position.x + radius.x - 1;
+		vertex.RightBottom.y = position.y + radius.y - 1;
 
 	}
-
 	//接触判定更新
 	void SetCollisionFlag(Direct direct) {
 
 		collisionDirect[direct] = true;
 
 	}
-
 	//接触判定リセット(必ず最後に)
 	void ResetCollision() {
 
@@ -178,10 +179,11 @@ public:
 
 	}
 
-	///アクセッサ
+	///1F前の座標(アクセッサ)
 	Vector2 GetPrePosition() {
 		return prePosition;
 	}
+	///半径(アクセッサ)
 	Vector2 GetRadius() {
 		return radius;
 	}
@@ -198,17 +200,18 @@ public:
 	Weapon() {
 		prePosition = {};
 		radius = { 12.0f,12.0f };
-		vertex[0] = {};
+		vertex = {};
 		verocity = { 0.0f };
 		acceleration = { 0.0f };
 		collisionDirect[0] = { false };
 		isBodyExist = false;
 		detonationCount = 0;
 
-		weaponBlast = new Blast(108.0f);
+		weaponBlast = new Blast(kblastRadius);
 
 	}
 
+	//攻撃の初期化処理
 	void ResetWeapon() {
 
 		position.x = -200.0f;
@@ -217,7 +220,7 @@ public:
 		detonationCount = 0;
 
 	}
-
+	//攻撃の発生処理
 	void SetThrowWeapon(const Vector2 &weaponPosition, const PlayerDirect &weaponDirect) {
 		position = weaponPosition;
 		verocity.y = -12.6f;
@@ -232,14 +235,14 @@ public:
 		isBodyExist = true;
 
 	}
-
+	//攻撃の移動処理
 	void SetMoveWeapon() {
 
 		if (!weaponBlast->GetBlastDetonation()) {
 
 			detonationCount++;
 
-			acceleration.y = gravity;
+			acceleration.y = kgravity;
 
 			verocity.y += acceleration.y;
 
@@ -275,7 +278,7 @@ public:
 		}
 
 	}
-
+	//攻撃の加速度更新(ぶつかった時)
 	void SetCollisionVerocity(const Direct &direct) {
 		if (direct == Direct_Up || direct == Direct_Down) {
 			verocity.y = 0.0f;
@@ -285,10 +288,11 @@ public:
 		}
 	}
 
-	///アクセッサ
+	///本体出現判定(アクセッサ)
 	bool GetBodyExist() {
 		return isBodyExist;
 	}
+	///攻撃の爆風(アクセッサ)
 	Blast* GetWeaponBlast() {
 		return weaponBlast;
 	}
@@ -304,10 +308,9 @@ private:
 	Vector2 additionalVerocity; //入力時加速度
 	PlayerDirect direct; //方向
 	bool isJump[2]; //ジャンプ判定
-	Weapon* playerWeapon;
+	Weapon* playerWeapon; //プレイヤーの攻撃
 
 public:
-	//コンストラクタ
 	Character() {
 		position = {};
 		radius = { 18.0f,24.0f };
@@ -315,7 +318,7 @@ public:
 		isJump[0] = { false };
 		color = 0xFFFFFFFF;
 		prePosition = {};
-		vertex[0] = {};
+		vertex = {};
 		verocity = {};
 		acceleration = {};
 		additionalVerocity = {};
@@ -325,7 +328,7 @@ public:
 
 	}
 
-	//攻撃処理
+	//プレイヤーの攻撃処理
 	void SetAttack(const char inputKey[], const char preInputKey[]) {
 
 		playerWeapon->SetPrePosition();
@@ -340,8 +343,7 @@ public:
 		}
 
 	}
-
-	//移動処理
+	//プレイヤーの移動処理
 	void SetMove(const char inputKey[], const char preInputKey[]) {
 
 		SetPrePosition();
@@ -362,7 +364,7 @@ public:
 			isJump[0] = true;
 		}
 
-		acceleration.y = gravity;
+		acceleration.y = kgravity;
 
 		if (inputKey[DIK_SPACE] && !preInputKey[DIK_SPACE] && !isJump[0]) {
 			verocity.y = additionalVerocity.y;
@@ -408,8 +410,7 @@ public:
 		SetAttack(inputKey, preInputKey);
 
 	}
-
-	//ジャンプリセット
+	//プレイヤーのジャンプのリセット
 	void ResetJumpFlag(Direct direct) {
 		verocity.y = 0.0f;
 
@@ -419,8 +420,7 @@ public:
 		}
 
 	}
-
-	//プレイヤー初期化
+	//プレイヤーの初期化
 	void ResetPlayer(float setX, float setY) {
 
 		position.x = setX;
@@ -433,8 +433,7 @@ public:
 
 	}
 
-	///アクセッサ
-
+	///プレイヤーの攻撃(アクセッサ)
 	Weapon* GetWeapon() {
 		return playerWeapon;
 	}
@@ -478,47 +477,83 @@ public:
 
 class Enemy : public Object {
 private:
-	EnemyType MovingType; //行動タイプ
 	bool isExist; //存在フラグ
 	float enemyRadius; //半径
 	Vector2 verocity; //速度
 	Blast* enemyBlast; //爆風
+	float enemyAngle; //エネミーの動く方向
+	float enemyToPlayerLength; //エネミーとプレイヤーの距離
+	int freeMoveCount; //エネミーの方向転換カウント
 
 public:
 	Enemy() {
 		position = { -200.0f,-200.0f };
 		color = 0xFF0000FF;
-		MovingType = Enemy_NotMove;
 		isExist = false;
 		enemyRadius = 0;
 		verocity = { 0.0f,0.0f };
+		enemyAngle = 0.0f;
+		enemyToPlayerLength = 0.0f;
+		freeMoveCount = 0;
 
-		enemyBlast = new Blast(92.0f);
+		enemyBlast = new Blast(kblastRadius);
 
 	}
 
-	void SetEnemy(const float &setX, const float &setY, const float &setRadius, const EnemyType &setEnemyType) {
+	//エネミーの設置処理
+	void SetEnemy(const float &setX, const float &setY, const float &setRadius) {
 		SetPosition(setX, setY);
 		enemyRadius = setRadius;
-		MovingType = setEnemyType;
 		isExist = true;
 		enemyBlast->ResetBlast();
 	}
-
+	//エネミーの削除処理
 	void DefeatEnemy() {
 		SetPosition(-200.0f, -200.0f);
 		verocity = { 0.0f,0.0f };
 		isExist = false;
 	}
-
+	//エネミーの移動処理
 	void MoveEnemy(Character* getPlayer) {
-		if (!enemyBlast->GetBlastDetonation()) {
+
+		if (!enemyBlast->GetBlastDetonation() && isExist) {
+
+			enemyToPlayerLength = sqrtf((GetPosition().x - getPlayer->GetPosition().x) * (GetPosition().x - getPlayer->GetPosition().x) +
+				(GetPosition().y - getPlayer->GetPosition().y) * (GetPosition().y - getPlayer->GetPosition().y));
+
+			freeMoveCount++;
+
+			if (freeMoveCount == 1) {
+				enemyAngle = float(M_PI * (float(SetRandom(0, 2000)) * 0.001));
+			}
+			if (enemyToPlayerLength < 180.0f) {
+				enemyAngle = float(atan2(GetPosition().y - getPlayer->GetPosition().y, GetPosition().x - getPlayer->GetPosition().x) + M_PI);
+			}
+			if (freeMoveCount >= SetRandom(100, 220)) {
+				freeMoveCount = 0;
+			}
+
+			verocity.x = 0.85f * cosf(enemyAngle);
+			verocity.y = 0.85f * sinf(enemyAngle);
 
 			position.x += verocity.x;
 			position.y += verocity.y;
 
+			if (position.x < 0.0f + enemyRadius) {
+				position.x = 0.0f + enemyRadius;
+			}
+			if (position.x > kworldWidth - enemyRadius) {
+				position.x = kworldWidth - enemyRadius;
+			}
+			if (position.y < 0.0f + enemyRadius) {
+				position.y = 0.0f + enemyRadius;
+			}
+			if (position.y > kworldHeight - enemyRadius) {
+				position.y = kworldHeight - enemyRadius;
+			}
+
 		}
-		else {
+		else if(enemyBlast->GetBlastDetonation()) {
 
 			enemyBlast->SetBlastDetonation();
 
@@ -530,15 +565,19 @@ public:
 
 	}
 
+	//エネミーの存在フラグ(アクセッサ)
 	bool GetExist() {
 		return isExist;
 	}
+	//エネミーの存在半径(アクセッサ)
 	float GetEnemyRadius() {
 		return enemyRadius;
 	}
+	//エネミーの爆風(アクセッサ)
 	Blast* GetEnemyBlast() {
 		return enemyBlast;
 	}
+
 	~Enemy() {
 		delete enemyBlast;
 	}
@@ -694,7 +733,7 @@ void SetWeaponToMapCollision(Weapon* a, Map* b) {
 /// </summary>
 /// <param name="a">プレイヤーオブジェクト</param>
 /// <param name="b">静的オブジェクト</param>
-void SetPlayerToMapCollision(Character* a, Map* b,bool& goolFrag) {
+void SetPlayerToMapCollision(Character* a, Map* b, bool& goolFrag) {
 
 	if (a->GetPosition().y > b->GetPosition().y - a->GetRadius().y
 		&& a->GetPosition().y < (b->GetPosition().y + kblockSizeY) + a->GetRadius().y
@@ -790,4 +829,44 @@ void SetScroll(Character* a, Vector2 scrollPoint, Vector2& world, Vector2& local
 	}
 
 	return;
+} 
+
+/// <summary>
+/// クリア処理
+/// </summary>
+/// <param name="a">エネミーオブジェクト</param>
+/// <param name="b">マップオブジェクト</param>
+/// <returns>
+/// エネミーがいない且つ壊れるブロックが無いとtrue
+/// </returns>
+bool SetClearCount(Enemy* a[kenemyNum], Map* b[kblockQuantityY][kblockQuantityX]) {
+
+	int fragileRemain = 0; //壊れるブロックの残り数
+	int enemyRemain = 0; //エネミーの残り数
+
+	for (int i = 0; i < kblockQuantityX; i++) {
+		for (int j = 0; j < kblockQuantityY; j++) {
+
+			if (b[j][i]->GetMapChip() == Map_Fragile) {
+				fragileRemain++;
+			}
+
+		}
+	}
+
+	for (int i = 0; i < kenemyNum; i++) {
+
+		if (a[i]->GetExist()) {
+			enemyRemain++;
+		}
+
+	}
+
+	if ((fragileRemain + enemyRemain) == 0) {
+		return true;
+	}
+	else {
+		return false;
+	}
+
 }
