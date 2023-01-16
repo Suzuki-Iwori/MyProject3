@@ -42,6 +42,7 @@ enum MapType {
 	Map_None,
 	Map_Block,
 	Map_Fragile,
+	Map_Slip,
 	Map_Gool
 };
 
@@ -123,6 +124,15 @@ public:
 	//爆風出現判定(アクセッサ)
 	bool GetBlastDetonation() {
 		return isBlastDetonation;
+	}
+	//爆風継続判定(アクセッサ)
+	bool GetAfterBlastDetonation() {
+		if (calmDownCount >= 10) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 	//爆風半径(アクセッサ)
 	float GetBlastRadius() {
@@ -308,6 +318,7 @@ private:
 	Vector2 additionalVerocity; //入力時加速度
 	PlayerDirect direct; //方向
 	bool isJump[2]; //ジャンプ判定
+	bool isThrough; //すり抜け判定
 	Weapon* playerWeapon; //プレイヤーの攻撃
 
 public:
@@ -316,6 +327,7 @@ public:
 		radius = { 18.0f,24.0f };
 		collisionDirect[0] = { false };
 		isJump[0] = { false };
+		isThrough = false;
 		color = 0xFFFFFFFF;
 		prePosition = {};
 		vertex = {};
@@ -358,6 +370,13 @@ public:
 		}
 		else if (!inputKey[DIK_LEFT] && !inputKey[DIK_RIGHT]) {
 			verocity.x = 0.0f;
+		}
+
+		if (inputKey[DIK_DOWN]) {
+			isThrough = true;
+		}
+		else {
+			isThrough = false;
 		}
 
 		if (verocity.y != 0.0f) {
@@ -436,6 +455,9 @@ public:
 	///プレイヤーの攻撃(アクセッサ)
 	Weapon* GetWeapon() {
 		return playerWeapon;
+	}
+	bool GetThrough() {
+		return isThrough;
 	}
 	void PrintCollision() {
 
@@ -605,6 +627,9 @@ public:
 		else if (mapChip == Map_Fragile) {
 			color = 0xFF00FFFF;
 		}
+		else if (mapChip == Map_Slip) {
+			color = 0x00FFFFFF;
+		}
 		else if (mapChip == Map_Gool) {
 			color = 0xFFFF0070;
 		}
@@ -626,6 +651,9 @@ public:
 		else if (mapChip == Map_Fragile) {
 			color = 0xFF00FFFF;
 		}
+		else if (mapChip == Map_Slip) {
+			color = 0x00FFFFFF;
+		}
 		else if (mapChip == Map_Gool) {
 			color = 0xFFFF0070;
 		}
@@ -637,13 +665,13 @@ public:
 /// <summary>
 /// 接触処理(爆風->エネミー)
 /// </summary>
-/// <param name="a">プレイヤーオブジェクト</param>
+/// <param name="a">爆風オブジェクト</param>
 /// <param name="b">エネミーオブジェクト</param>
 void SetBlastToEnemyCollision(Blast* a, Enemy* b) {
 	float length = sqrtf((b->GetPosition().x - a->GetPosition().x) * (b->GetPosition().x - a->GetPosition().x) +
 		(b->GetPosition().y - a->GetPosition().y) * (b->GetPosition().y - a->GetPosition().y));
 
-	if (a->GetBlastDetonation() && !b->GetEnemyBlast()->GetBlastDetonation() && length <= a->GetBlastRadius() + b->GetEnemyRadius()) {
+	if (a->GetBlastDetonation() && a->GetAfterBlastDetonation() && !b->GetEnemyBlast()->GetBlastDetonation() && length <= a->GetBlastRadius() + b->GetEnemyRadius()) {
 
 		b->GetEnemyBlast()->SetBlast(b->GetPosition());
 
@@ -654,7 +682,7 @@ void SetBlastToEnemyCollision(Blast* a, Enemy* b) {
 /// <summary>
 /// 接触処理(爆風->壊せるブロック)
 /// </summary>
-/// <param name="a">プレイヤーオブジェクト</param>
+/// <param name="a">爆風オブジェクト</param>
 /// <param name="b">マップオブジェクト</param>
 void SetBlastToFragileCollision(Blast* a, Map* b) {
 	float length = sqrtf((b->GetPosition().x + (kblockSizeX / 2.0f) - a->GetPosition().x) * (b->GetPosition().x + (kblockSizeX / 2.0f) - a->GetPosition().x) +
@@ -673,7 +701,7 @@ void SetBlastToFragileCollision(Blast* a, Map* b) {
 }
 
 /// <summary>
-/// 接触処理(ウェポン)
+/// 接触処理(ウェポン->ブロック)
 /// </summary>
 /// <param name="a">ウェポンオブジェクト</param>
 /// <param name="b">マップオブジェクト</param>
@@ -721,6 +749,15 @@ void SetWeaponToMapCollision(Weapon* a, Map* b) {
 			}
 
 		}
+		else if (b->GetMapChip() == Map_Slip) {
+			if (a->GetPrePosition().y <= b->GetPosition().y - a->GetRadius().y) {
+
+				a->SetPosition(a->GetPosition().x, b->GetPosition().y - a->GetRadius().y);
+				a->SetCollisionVerocity(Direct_Up);
+				a->SetCollisionFlag(Direct_Up);
+
+			}
+		}
 
 	}
 
@@ -729,7 +766,7 @@ void SetWeaponToMapCollision(Weapon* a, Map* b) {
 }
 
 /// <summary>
-/// 接触処理(プレイヤー)
+/// 接触処理(プレイヤー->ブロック)
 /// </summary>
 /// <param name="a">プレイヤーオブジェクト</param>
 /// <param name="b">静的オブジェクト</param>
@@ -774,6 +811,15 @@ void SetPlayerToMapCollision(Character* a, Map* b, bool& goolFrag) {
 				}
 			}
 
+		}
+		else if (b->GetMapChip() == Map_Slip) {
+			if (!a->GetThrough() && a->GetPrePosition().y <= b->GetPosition().y - a->GetRadius().y) {
+
+				a->SetPosition(a->GetPosition().x, b->GetPosition().y - a->GetRadius().y);
+				a->SetCollisionFlag(Direct_Up);
+				a->ResetJumpFlag(Direct_Up);
+
+			}
 		}
 		else if (b->GetMapChip() == Map_Gool) {
 			goolFrag = true;
