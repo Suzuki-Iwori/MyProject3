@@ -101,8 +101,10 @@
     <ClCompile Include="C:\KamataEngine\Adapter\Novice.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Souce\object.cpp" />
+    <ClCompile Include="Souce\sceneManager.cpp" />
     <ClCompile Include="Souce\stage.cpp" />
     <ClCompile Include="Souce\system.cpp" />
+    <ClCompile Include="Souce\title.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\DirectXGame\math\MathUtility.h" />
@@ -132,8 +134,11 @@
     <ClInclude Include="C:\KamataEngine\DirectXGame\scene\GameScene.h" />
     <ClInclude Include="C:\KamataEngine\Adapter\Novice.h" />
     <ClInclude Include="Header\object.h" />
+    <ClInclude Include="Header\scene.h" />
+    <ClInclude Include="Header\sceneManager.h" />
     <ClInclude Include="Header\stage.h" />
     <ClInclude Include="Header\system.h" />
+    <ClInclude Include="Header\title.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

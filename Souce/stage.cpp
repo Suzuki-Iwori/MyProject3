@@ -5,6 +5,7 @@
 const Vector2 scrollPoint = { float(kscreenWidth / 2.0f),float(kscreenHeight / 2.0f) }; //スクロール点
 
 Stage::Stage() {
+
 	Player = new Character;
 	for (int i = 0; i < kenemyNum; i++) {
 		Dust[i] = new Enemy;
@@ -24,6 +25,9 @@ Stage::Stage() {
 
 }
 void Stage::Initialize() {
+
+	SceneFragReset();
+
 	for (int i = 0; i < kblockQuantityX; i++) {
 		for (int j = 0; j < kblockQuantityY; j++) {
 
@@ -71,6 +75,7 @@ void Stage::Update(const char inputKeys[], const char preInputKeys[]) {
 	}
 
 	if (SetClearCount(Dust, MapInfo) && isGool && inputKeys[DIK_UP]) {
+		sceneTransition[Scene_Title] = true;
 	}
 
 	SetScroll(Player, scrollPoint, world, local, scroll);

@@ -1,9 +1,16 @@
 ﻿#include <Novice.h>
 #include <time.h>
-#include "system.h"
-#include "stage.h"
+//#include "stage.h"
+//#include "title.h"
+
+#include "sceneManager.h"
 
 const char kWindowTitle[] = "マインスイーパー";
+
+const int kscreenWidth = 1200; //スクリーン横幅
+const int kscreenHeight = 720; //スクリーン縦幅
+
+bool Scene::sceneTransition[Scene_Num];
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -17,9 +24,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	srand(unsigned int(time(nullptr)));
 
+	/*Title* title = new Title;
+
 	Stage* stage1 = new Stage;
 
-	Scene scene = Scene_Loading;
+	SceneSection scene = Scene_Title;*/
+
+	SceneManager* GameScene = new SceneManager;
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -30,14 +41,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		memcpy(preKeys, keys, 256);
 		Novice::GetHitKeyStateAll(keys);
 
-		switch (scene) {
+		GameScene->Update(keys, preKeys);
+
+		GameScene->Draw();
+
+		/*switch (scene) {
 		case Scene_Title:
 
 			if (keys[DIK_SPACE] && !preKeys[DIK_SPACE]) {
 				scene = Scene_Loading;
 			}
 
-			Novice::DrawBox(0, 0, kscreenWidth, kscreenHeight, 0.0f, 0x000000FF, kFillModeSolid);
+			title->Update(keys, preKeys);
+			 
+			title->Draw();
 
 			break;
 
@@ -89,7 +106,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			break;
 
-		}
+		}*/
 
 		// フレームの終了
 		Novice::EndFrame();
@@ -100,7 +117,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 	}
 
-	delete stage1;
+	//delete stage1;
+
+	delete GameScene;
 
 	// ライブラリの終了
 	Novice::Finalize();

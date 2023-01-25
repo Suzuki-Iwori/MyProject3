@@ -12,14 +12,6 @@ const float kgravity = 0.45f; //重力
 const int kenemyNum = 32; //エネミーの最大数
 const float kblastRadius = 124.0f; //爆風の半径
 
-enum Scene {
-	Scene_Title,
-	Scene_Loading,
-	Scene_Stage1,
-	Scene_GameClear,
-	Scene_GameOver
-};
-
 enum Direct {
 	Direct_Up,
 	Direct_Left,
@@ -59,8 +51,8 @@ struct Vertex {
 /// 座標を持つオブジェクト
 class Object {
 protected:
-	Vector2 position; //座標
-	unsigned int color; //色
+	Vector2 position_; //座標
+	unsigned int color_; //色
 
 public:
 	//座標の更新(X,Y個別)
@@ -78,9 +70,9 @@ public:
 /// 爆風
 class Blast : public Object {
 private:
-	bool isBlastDetonation; //爆風出現判定
-	int calmDownCount; //起爆継続カウント
-	float blastRadius; //爆風半径
+	bool isBlastDetonation_; //爆風出現判定
+	int calmDownCount_; //起爆継続カウント
+	float blastRadius_; //爆風半径
 
 public:
 	Blast(float setBlastRadius);
@@ -104,12 +96,12 @@ public:
 /// 動くオブジェクト
 class Dynamic : public Object {
 protected:
-	Vector2 prePosition; //1F前の座標
-	Vector2 radius; //半径
-	Vertex vertex; //矩形としての4点
-	Vector2 verocity; //速度
-	Vector2 acceleration; //加速度
-	bool collisionDirect[4]; //接触判定
+	Vector2 prePosition_; //1F前の座標
+	Vector2 radius_; //半径
+	Vertex vertex_; //矩形としての4点
+	Vector2 verocity_; //速度
+	Vector2 acceleration_; //加速度
+	bool collisionDirect_[4]; //接触判定
 
 public:
 	//1F前の座標を更新(接触判定に使う)(必ず移動処理の前に)
@@ -131,9 +123,9 @@ public:
 /// 爆発物
 class Weapon : public Dynamic {
 private:
-	bool isBodyExist; //本体出現判定
-	int detonationCount; //起爆カウント
-	Blast* weaponBlast; //爆風
+	bool isBodyExist_; //本体出現判定
+	int detonationCount_; //起爆カウント
+	Blast* weaponBlast_; //爆風
 
 public:
 	Weapon();
@@ -159,11 +151,11 @@ public:
 /// プレイヤー
 class Character : public Dynamic {
 private:
-	Vector2 additionalVerocity; //入力時加速度
-	PlayerDirect direct; //方向
-	bool isJump[2]; //ジャンプ判定
-	bool isThrough; //すり抜け判定
-	Weapon* playerWeapon; //プレイヤーの攻撃
+	Vector2 additionalVerocity_; //入力時加速度
+	PlayerDirect direct_; //方向
+	bool isJump_[2]; //ジャンプ判定
+	bool isThrough_; //すり抜け判定
+	Weapon* playerWeapon_; //プレイヤーの攻撃
 
 public:
 	Character();
@@ -189,13 +181,13 @@ public:
 /// エネミー
 class Enemy : public Object {
 private:
-	bool isExist; //存在フラグ
-	float enemyRadius; //半径
-	Vector2 verocity; //速度
-	float enemyAngle; //エネミーの動く方向
-	float enemyToPlayerLength; //エネミーとプレイヤーの距離
-	int freeMoveCount; //エネミーの方向転換カウント
-	Blast* enemyBlast; //爆風
+	bool isExist_; //存在フラグ
+	float enemyRadius_; //半径
+	Vector2 verocity_; //速度
+	float enemyAngle_; //エネミーの動く方向
+	float enemyToPlayerLength_; //エネミーとプレイヤーの距離
+	int freeMoveCount_; //エネミーの方向転換カウント
+	Blast* enemyBlast_; //爆風
 
 public:
 	Enemy();
@@ -221,8 +213,8 @@ public:
 /// マップ
 class Map : public Object {
 private:
-	int mapChip;
-	Vector2 mapChipPosition;
+	int mapChip_; //マップ種類
+	Vector2 mapChipPosition_; //マップチップとしての座標
 
 public:
 	Map(int x, int y, int map);

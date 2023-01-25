@@ -1,8 +1,8 @@
 #pragma once
-#include <Novice.h>
+#include "scene.h"
 #include "object.h"
 
-class Stage {
+class Stage : public Scene {
 private:
 	int map[kblockQuantityY][kblockQuantityX] = {
 
@@ -46,11 +46,11 @@ public:
 	Stage();
 
 	//‰Šú‰»
-	void Initialize();
+	void Initialize() override;
 	//XV
-	void Update(const char inputKeys[], const char preInputKeys[]);
+	void Update(const char inputKeys[], const char preInputKeys[]) override;
 	//•`Ê
-	void Draw();
+	void Draw() override;
 
 	~Stage();
 

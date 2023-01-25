@@ -7,17 +7,17 @@
 ///↓Objectクラス
 
 void Object::SetPosition(const float& setX, const float& setY) {
-	position.x = setX;
-	position.y = setY;
+	position_.x = setX;
+	position_.y = setY;
 }
 void Object::SetPosition(const Vector2& setPosition) {
-	position = setPosition;
+	position_ = setPosition;
 }
 Vector2 Object::GetPosition() {
-	return position;
+	return position_;
 }
 unsigned int Object::GetColor() {
-	return color;
+	return color_;
 }
 
 ///↑Objectクラス
@@ -25,34 +25,34 @@ unsigned int Object::GetColor() {
 ///↓Blastクラス
 
 Blast::Blast(float setBlastRadius) {
-	position = { -200.0f,-200.0f };
-	color = 0xFFFFFF70;
-	isBlastDetonation = false;
-	calmDownCount = 0;
-	blastRadius = setBlastRadius;
+	position_ = { -200.0f,-200.0f };
+	color_ = 0xFFFFFF70;
+	isBlastDetonation_ = false;
+	calmDownCount_ = 0;
+	blastRadius_ = setBlastRadius;
 }
 void Blast::ResetBlast() {
-	isBlastDetonation = false;
-	calmDownCount = 0;
+	isBlastDetonation_ = false;
+	calmDownCount_ = 0;
 	SetPosition(-200.0f, -200.0f);
 }
 void Blast::SetBlast(const Vector2& setPosition) {
 	SetPosition(setPosition);
-	isBlastDetonation = true;
+	isBlastDetonation_ = true;
 }
 void Blast::SetBlastDetonation() {
-	calmDownCount++;
+	calmDownCount_++;
 
-	if (calmDownCount >= 24) {
+	if (calmDownCount_ >= 24) {
 		ResetBlast();
 	}
 
 }
 bool Blast::GetBlastDetonation() {
-	return isBlastDetonation;
+	return isBlastDetonation_;
 }
 bool Blast::GetAfterBlastDetonation() {
-	if (calmDownCount >= 10) {
+	if (calmDownCount_ >= 10) {
 		return true;
 	}
 	else {
@@ -60,7 +60,7 @@ bool Blast::GetAfterBlastDetonation() {
 	}
 }
 float Blast::GetBlastRadius() {
-	return blastRadius;
+	return blastRadius_;
 }
 
 ///↑Blastクラス
@@ -69,42 +69,42 @@ float Blast::GetBlastRadius() {
 
 void Dynamic::SetPrePosition() {
 
-	prePosition = position;
+	prePosition_ = position_;
 
 }
 void Dynamic::SetVertex() {
 
-	vertex.LeftTop.x = position.x - radius.x;
-	vertex.LeftTop.y = position.y - radius.y;
+	vertex_.LeftTop.x = position_.x - radius_.x;
+	vertex_.LeftTop.y = position_.y - radius_.y;
 
-	vertex.RightTop.x = position.x + radius.x - 1;
-	vertex.RightTop.y = position.y - radius.y;
+	vertex_.RightTop.x = position_.x + radius_.x - 1;
+	vertex_.RightTop.y = position_.y - radius_.y;
 
-	vertex.LeftBottom.x = position.x - radius.x;
-	vertex.LeftBottom.y = position.y + radius.y - 1;
+	vertex_.LeftBottom.x = position_.x - radius_.x;
+	vertex_.LeftBottom.y = position_.y + radius_.y - 1;
 
-	vertex.RightBottom.x = position.x + radius.x - 1;
-	vertex.RightBottom.y = position.y + radius.y - 1;
+	vertex_.RightBottom.x = position_.x + radius_.x - 1;
+	vertex_.RightBottom.y = position_.y + radius_.y - 1;
 
 }
 void Dynamic::SetCollisionFlag(Direct direct) {
 
-	collisionDirect[direct] = true;
+	collisionDirect_[direct] = true;
 
 }
 void Dynamic::ResetCollision() {
 
-	collisionDirect[Direct_Up] = false;
-	collisionDirect[Direct_Down] = false;
-	collisionDirect[Direct_Left] = false;
-	collisionDirect[Direct_Right] = false;
+	collisionDirect_[Direct_Up] = false;
+	collisionDirect_[Direct_Down] = false;
+	collisionDirect_[Direct_Left] = false;
+	collisionDirect_[Direct_Right] = false;
 
 }
 Vector2 Dynamic::GetPrePosition() {
-	return prePosition;
+	return prePosition_;
 }
 Vector2 Dynamic::GetRadius() {
-	return radius;
+	return radius_;
 }
 
 ///↑Dynamicクラス
@@ -112,76 +112,76 @@ Vector2 Dynamic::GetRadius() {
 ///↓Weaponクラス
 
 Weapon::Weapon() {
-	prePosition = {};
-	radius = { 12.0f,12.0f };
-	vertex = {};
-	verocity = { 0.0f };
-	acceleration = { 0.0f };
-	collisionDirect[0] = { false };
-	isBodyExist = false;
-	detonationCount = 0;
+	prePosition_ = {};
+	radius_ = { 12.0f,12.0f };
+	vertex_ = {};
+	verocity_ = { 0.0f };
+	acceleration_ = { 0.0f };
+	collisionDirect_[0] = { false };
+	isBodyExist_ = false;
+	detonationCount_ = 0;
 
-	weaponBlast = new Blast(kblastRadius);
+	weaponBlast_ = new Blast(kblastRadius);
 
 }
 void Weapon::ResetWeapon() {
 
-	position.x = -200.0f;
-	position.y = -200.0f;
-	isBodyExist = false;
-	detonationCount = 0;
+	position_.x = -200.0f;
+	position_.y = -200.0f;
+	isBodyExist_ = false;
+	detonationCount_ = 0;
 
 }
 void Weapon::SetThrowWeapon(const Vector2& weaponPosition, const PlayerDirect& weaponDirect) {
-	position = weaponPosition;
-	verocity.y = -12.6f;
+	position_ = weaponPosition;
+	verocity_.y = -12.6f;
 
 	if (weaponDirect == Player_Left || weaponDirect == Player_LeftUp) {
-		verocity.x = -4.2f;
+		verocity_.x = -4.2f;
 	}
 	else if (weaponDirect == Player_Right || weaponDirect == Player_RightUp) {
-		verocity.x = 4.2f;
+		verocity_.x = 4.2f;
 	}
 
-	isBodyExist = true;
+	isBodyExist_ = true;
 
 }
 void Weapon::SetMoveWeapon() {
 
-	if (!weaponBlast->GetBlastDetonation()) {
+	if (!weaponBlast_->GetBlastDetonation()) {
 
-		detonationCount++;
+		detonationCount_++;
 
-		acceleration.y = kgravity;
+		acceleration_.y = kgravity;
 
-		verocity.y += acceleration.y;
+		verocity_.y += acceleration_.y;
 
-		if (verocity.y > 12.0f) {
-			verocity.y = 12.0f;
+		if (verocity_.y > 12.0f) {
+			verocity_.y = 12.0f;
 		}
 
-		if (verocity.x != 0.0f) {
-			if (verocity.x < 0.0f) {
-				verocity.x += 0.045f;
+		if (verocity_.x != 0.0f) {
+			if (verocity_.x < 0.0f) {
+				verocity_.x += 0.045f;
 			}
-			if (verocity.x > 0.0f) {
-				verocity.x -= 0.045f;
+			if (verocity_.x > 0.0f) {
+				verocity_.x -= 0.045f;
 			}
 		}
 
-		position.x += verocity.x;
-		position.y += verocity.y;
+		position_.x += verocity_.x;
+		position_.y += verocity_.y;
 
-		if (detonationCount >= 120) {
-			weaponBlast->SetBlast(position);
+		if (detonationCount_ >= 120) {
+			weaponBlast_->SetBlast(position_);
 		}
 
 	}
 	else {
 
-		weaponBlast->SetBlastDetonation();
+		weaponBlast_->SetBlastDetonation();
 
-		if (!weaponBlast->GetBlastDetonation()) {
+		if (!weaponBlast_->GetBlastDetonation()) {
 			ResetWeapon();
 		}
 
@@ -190,20 +190,20 @@ void Weapon::SetMoveWeapon() {
 }
 void Weapon::SetCollisionVerocity(const Direct& direct) {
 	if (direct == Direct_Up || direct == Direct_Down) {
-		verocity.y = 0.0f;
+		verocity_.y = 0.0f;
 	}
 	if (direct == Direct_Left || direct == Direct_Right) {
-		verocity.x *= -1.0f;
+		verocity_.x *= -1.0f;
 	}
 }
 bool Weapon::GetBodyExist() {
-	return isBodyExist;
+	return isBodyExist_;
 }
 Blast* Weapon::GetWeaponBlast() {
-	return weaponBlast;
+	return weaponBlast_;
 }
 Weapon::~Weapon() {
-	delete weaponBlast;
+	delete weaponBlast_;
 }
 
 ///↑Weaponクラス
@@ -211,33 +211,33 @@ Weapon::~Weapon() {
 ///↓Characterクラス
 
 Character::Character() {
-	position = {};
-	radius = { 18.0f,24.0f };
-	collisionDirect[0] = { false };
-	isJump[0] = { false };
-	isThrough = false;
-	color = 0xFFFFFFFF;
-	prePosition = {};
-	vertex = {};
-	verocity = {};
-	acceleration = {};
-	additionalVerocity = {};
-	direct = {};
+	position_ = {};
+	radius_ = { 18.0f,24.0f };
+	collisionDirect_[0] = { false };
+	isJump_[0] = { false };
+	isThrough_ = false;
+	color_ = 0xFFFFFFFF;
+	prePosition_ = {};
+	vertex_ = {};
+	verocity_ = {};
+	acceleration_ = {};
+	additionalVerocity_ = {};
+	direct_ = {};
 
-	playerWeapon = new Weapon;
+	playerWeapon_ = new Weapon;
 
 }
 void Character::SetAttack(const char inputKey[], const char preInputKey[]) {
 
-	playerWeapon->SetPrePosition();
+	playerWeapon_->SetPrePosition();
 
-	if (inputKey[DIK_Z] && !preInputKey[DIK_Z] && !playerWeapon->GetBodyExist()) {
+	if (inputKey[DIK_Z] && !preInputKey[DIK_Z] && !playerWeapon_->GetBodyExist()) {
 
-		playerWeapon->SetThrowWeapon(position, direct);
+		playerWeapon_->SetThrowWeapon(position_, direct_);
 
 	}
-	if (playerWeapon->GetBodyExist()) {
-		playerWeapon->SetMoveWeapon();
+	if (playerWeapon_->GetBodyExist()) {
+		playerWeapon_->SetMoveWeapon();
 	}
 
 }
@@ -245,134 +245,134 @@ void Character::SetMove(const char inputKey[], const char preInputKey[]) {
 
 	SetPrePosition();
 
-	additionalVerocity.y = -9.4f;
+	additionalVerocity_.y = -9.4f;
 
 	if (inputKey[DIK_LEFT]) {
-		verocity.x = -3.0f;
+		verocity_.x = -3.0f;
 	}
 	else if (inputKey[DIK_RIGHT]) {
-		verocity.x = 3.0f;
+		verocity_.x = 3.0f;
 	}
 	else if (!inputKey[DIK_LEFT] && !inputKey[DIK_RIGHT]) {
-		verocity.x = 0.0f;
+		verocity_.x = 0.0f;
 	}
 
 	if (inputKey[DIK_DOWN]) {
-		isThrough = true;
+		isThrough_ = true;
 	}
 	else {
-		isThrough = false;
+		isThrough_ = false;
 	}
 
-	if (verocity.y != 0.0f) {
-		isJump[0] = true;
+	if (verocity_.y != 0.0f) {
+		isJump_[0] = true;
 	}
 
-	acceleration.y = kgravity;
+	acceleration_.y = kgravity;
 
-	if (inputKey[DIK_SPACE] && !preInputKey[DIK_SPACE] && !isJump[0]) {
-		verocity.y = additionalVerocity.y;
-		isJump[0] = true;
+	if (inputKey[DIK_SPACE] && !preInputKey[DIK_SPACE] && !isJump_[0]) {
+		verocity_.y = additionalVerocity_.y;
+		isJump_[0] = true;
 	}
-	else if (inputKey[DIK_SPACE] && !preInputKey[DIK_SPACE] && isJump[0] && !isJump[1]) {
-		verocity.y = additionalVerocity.y * 0.8f;
-		isJump[1] = true;
-	}
-
-	verocity.y += acceleration.y;
-
-	if (verocity.y > 12.0f) {
-		verocity.y = 12.0f;
+	else if (inputKey[DIK_SPACE] && !preInputKey[DIK_SPACE] && isJump_[0] && !isJump_[1]) {
+		verocity_.y = additionalVerocity_.y * 0.8f;
+		isJump_[1] = true;
 	}
 
-	if (verocity.x > 0.0f) {
-		direct = Player_Right;
+	verocity_.y += acceleration_.y;
+
+	if (verocity_.y > 12.0f) {
+		verocity_.y = 12.0f;
 	}
-	else if (verocity.x < 0.0f) {
-		direct = Player_Left;
+
+	if (verocity_.x > 0.0f) {
+		direct_ = Player_Right;
 	}
-	if (verocity.y < 0.0f) {
-		if (direct == Player_Left) {
-			direct = Player_LeftUp;
+	else if (verocity_.x < 0.0f) {
+		direct_ = Player_Left;
+	}
+	if (verocity_.y < 0.0f) {
+		if (direct_ == Player_Left) {
+			direct_ = Player_LeftUp;
 		}
-		else if (direct == Player_Right) {
-			direct = Player_RightUp;
-		}
-	}
-	if (verocity.y >= 0.0f) {
-		if (direct == Player_LeftUp) {
-			direct = Player_Left;
-		}
-		else if (direct == Player_RightUp) {
-			direct = Player_Right;
+		else if (direct_ == Player_Right) {
+			direct_ = Player_RightUp;
 		}
 	}
+	if (verocity_.y >= 0.0f) {
+		if (direct_ == Player_LeftUp) {
+			direct_ = Player_Left;
+		}
+		else if (direct_ == Player_RightUp) {
+			direct_ = Player_Right;
+		}
+	}
 
-	position.x += verocity.x;
-	position.y += verocity.y;
+	position_.x += verocity_.x;
+	position_.y += verocity_.y;
 
 	SetAttack(inputKey, preInputKey);
 
 }
 void Character::ResetJumpFlag(Direct direct) {
-	verocity.y = 0.0f;
+	verocity_.y = 0.0f;
 
 	if (direct == Direct_Up) {
-		isJump[0] = false;
-		isJump[1] = false;
+		isJump_[0] = false;
+		isJump_[1] = false;
 	}
 
 }
 void Character::ResetPlayer(float setX, float setY) {
 
-	position.x = setX;
-	position.y = setY;
-	verocity.y = 0.0f;
-	isJump[1] = false;
+	position_.x = setX;
+	position_.y = setY;
+	verocity_.y = 0.0f;
+	isJump_[1] = false;
 
-	playerWeapon->ResetWeapon();
-	playerWeapon->GetWeaponBlast()->ResetBlast();
+	playerWeapon_->ResetWeapon();
+	playerWeapon_->GetWeaponBlast()->ResetBlast();
 
 }
 Weapon* Character::GetWeapon() {
-	return playerWeapon;
+	return playerWeapon_;
 }
 bool Character::GetThrough() {
-	return isThrough;
+	return isThrough_;
 }
 void Character::PrintCollision() {
 
-	if (collisionDirect[Direct_Up]) {
+	if (collisionDirect_[Direct_Up]) {
 		Novice::ScreenPrintf(0, 0, "1");
 	}
-	else if (!collisionDirect[Direct_Up]) {
+	else if (!collisionDirect_[Direct_Up]) {
 		Novice::ScreenPrintf(0, 0, "0");
 	}
 
-	if (collisionDirect[Direct_Down]) {
+	if (collisionDirect_[Direct_Down]) {
 		Novice::ScreenPrintf(0, 20, "1");
 	}
-	else if (!collisionDirect[Direct_Down]) {
+	else if (!collisionDirect_[Direct_Down]) {
 		Novice::ScreenPrintf(0, 20, "0");
 	}
 
-	if (collisionDirect[Direct_Left]) {
+	if (collisionDirect_[Direct_Left]) {
 		Novice::ScreenPrintf(0, 40, "1");
 	}
-	else if (!collisionDirect[Direct_Left]) {
+	else if (!collisionDirect_[Direct_Left]) {
 		Novice::ScreenPrintf(0, 40, "0");
 	}
 
-	if (collisionDirect[Direct_Right]) {
+	if (collisionDirect_[Direct_Right]) {
 		Novice::ScreenPrintf(0, 60, "1");
 	}
-	else if (!collisionDirect[Direct_Right]) {
+	else if (!collisionDirect_[Direct_Right]) {
 		Novice::ScreenPrintf(0, 60, "0");
 	}
 
 }
 Character::~Character() {
-	delete playerWeapon;
+	delete playerWeapon_;
 }
 
 ///↑Characterクラス
@@ -380,73 +380,73 @@ Character::~Character() {
 ///↓Enemyクラス
 
 Enemy::Enemy() {
-	position = { -200.0f,-200.0f };
-	color = 0xFF0000FF;
-	isExist = false;
-	enemyRadius = 0;
-	verocity = { 0.0f,0.0f };
-	enemyAngle = 0.0f;
-	enemyToPlayerLength = 0.0f;
-	freeMoveCount = 0;
+	position_ = { -200.0f,-200.0f };
+	color_ = 0xFF0000FF;
+	isExist_ = false;
+	enemyRadius_ = 0;
+	verocity_ = { 0.0f,0.0f };
+	enemyAngle_ = 0.0f;
+	enemyToPlayerLength_ = 0.0f;
+	freeMoveCount_ = 0;
 
-	enemyBlast = new Blast(kblastRadius);
+	enemyBlast_ = new Blast(kblastRadius);
 
 }
 void Enemy::SetEnemy(const float& setX, const float& setY, const float& setRadius) {
 	SetPosition(setX, setY);
-	enemyRadius = setRadius;
-	isExist = true;
-	enemyBlast->ResetBlast();
+	enemyRadius_ = setRadius;
+	isExist_ = true;
+	enemyBlast_->ResetBlast();
 }
 void Enemy::DefeatEnemy() {
 	SetPosition(-200.0f, -200.0f);
-	verocity = { 0.0f,0.0f };
-	isExist = false;
+	verocity_ = { 0.0f,0.0f };
+	isExist_ = false;
 }
 void Enemy::MoveEnemy(Character* getPlayer) {
 
-	if (!enemyBlast->GetBlastDetonation() && isExist) {
+	if (!enemyBlast_->GetBlastDetonation() && isExist_) {
 
-		enemyToPlayerLength = sqrtf((GetPosition().x - getPlayer->GetPosition().x) * (GetPosition().x - getPlayer->GetPosition().x) +
+		enemyToPlayerLength_ = sqrtf((GetPosition().x - getPlayer->GetPosition().x) * (GetPosition().x - getPlayer->GetPosition().x) +
 			(GetPosition().y - getPlayer->GetPosition().y) * (GetPosition().y - getPlayer->GetPosition().y));
 
-		freeMoveCount++;
+		freeMoveCount_++;
 
-		if (freeMoveCount == 1) {
-			enemyAngle = float(M_PI * (float(SetRandom(0, 2000)) * 0.001));
+		if (freeMoveCount_ == 1) {
+			enemyAngle_ = float(M_PI * (float(SetRandom(0, 2000)) * 0.001));
 		}
-		if (enemyToPlayerLength < 180.0f) {
-			enemyAngle = float(atan2(GetPosition().y - getPlayer->GetPosition().y, GetPosition().x - getPlayer->GetPosition().x) + M_PI);
+		if (enemyToPlayerLength_ < 180.0f) {
+			enemyAngle_ = float(atan2(GetPosition().y - getPlayer->GetPosition().y, GetPosition().x - getPlayer->GetPosition().x) + M_PI);
 		}
-		if (freeMoveCount >= SetRandom(100, 220)) {
-			freeMoveCount = 0;
+		if (freeMoveCount_ >= SetRandom(100, 220)) {
+			freeMoveCount_ = 0;
 		}
 
-		verocity.x = 0.85f * cosf(enemyAngle);
-		verocity.y = 0.85f * sinf(enemyAngle);
+		verocity_.x = 0.85f * cosf(enemyAngle_);
+		verocity_.y = 0.85f * sinf(enemyAngle_);
 
-		position.x += verocity.x;
-		position.y += verocity.y;
+		position_.x += verocity_.x;
+		position_.y += verocity_.y;
 
-		if (position.x < 0.0f + enemyRadius) {
-			position.x = 0.0f + enemyRadius;
+		if (position_.x < 0.0f + enemyRadius_) {
+			position_.x = 0.0f + enemyRadius_;
 		}
-		if (position.x > kworldWidth - enemyRadius) {
-			position.x = kworldWidth - enemyRadius;
+		if (position_.x > kworldWidth - enemyRadius_) {
+			position_.x = kworldWidth - enemyRadius_;
 		}
-		if (position.y < 0.0f + enemyRadius) {
-			position.y = 0.0f + enemyRadius;
+		if (position_.y < 0.0f + enemyRadius_) {
+			position_.y = 0.0f + enemyRadius_;
 		}
-		if (position.y > kworldHeight - enemyRadius) {
-			position.y = kworldHeight - enemyRadius;
+		if (position_.y > kworldHeight - enemyRadius_) {
+			position_.y = kworldHeight - enemyRadius_;
 		}
 
 	}
-	else if (enemyBlast->GetBlastDetonation()) {
+	else if (enemyBlast_->GetBlastDetonation()) {
 
-		enemyBlast->SetBlastDetonation();
+		enemyBlast_->SetBlastDetonation();
 
-		if (!enemyBlast->GetBlastDetonation()) {
+		if (!enemyBlast_->GetBlastDetonation()) {
 			DefeatEnemy();
 		}
 
@@ -454,16 +454,16 @@ void Enemy::MoveEnemy(Character* getPlayer) {
 
 }
 bool Enemy::GetExist() {
-	return isExist;
+	return isExist_;
 }
 float Enemy::GetEnemyRadius() {
-	return enemyRadius;
+	return enemyRadius_;
 }
 Blast* Enemy::GetEnemyBlast() {
-	return enemyBlast;
+	return enemyBlast_;
 }
 Enemy::~Enemy() {
-	delete enemyBlast;
+	delete enemyBlast_;
 }
 
 ///↑Enemyクラス
@@ -472,48 +472,48 @@ Enemy::~Enemy() {
 
 Map::Map(int x, int y, int map) {
 
-	position = { float(x) * 32.0f,float(y) * 32.0f };
-	mapChipPosition = { float(x),float(y) };
-	mapChip = map;
+	position_ = { float(x) * 32.0f,float(y) * 32.0f };
+	mapChipPosition_ = { float(x),float(y) };
+	mapChip_ = map;
 
-	if (mapChip == Map_None) {
-		color = 0x00000000;
+	if (mapChip_ == Map_None) {
+		color_ = 0x00000000;
 	}
-	else if (mapChip == Map_Block) {
-		color = 0x787878FF;
+	else if (mapChip_ == Map_Block) {
+		color_ = 0x787878FF;
 	}
-	else if (mapChip == Map_Fragile) {
-		color = 0xFF00FFFF;
+	else if (mapChip_ == Map_Fragile) {
+		color_ = 0xFF00FFFF;
 	}
-	else if (mapChip == Map_Slip) {
-		color = 0x00FFFFFF;
+	else if (mapChip_ == Map_Slip) {
+		color_ = 0x00FFFFFF;
 	}
-	else if (mapChip == Map_Gool) {
-		color = 0xFFFF0070;
+	else if (mapChip_ == Map_Gool) {
+		color_ = 0xFFFF0070;
 	}
 
 }
 int Map::GetMapChip() {
-	return mapChip;
+	return mapChip_;
 }
 void Map::SetMapChip(int map) {
 
-	mapChip = map;
+	mapChip_ = map;
 
-	if (mapChip == Map_None) {
-		color = 0x00000000;
+	if (mapChip_ == Map_None) {
+		color_ = 0x00000000;
 	}
-	else if (mapChip == Map_Block) {
-		color = 0x787878FF;
+	else if (mapChip_ == Map_Block) {
+		color_ = 0x787878FF;
 	}
-	else if (mapChip == Map_Fragile) {
-		color = 0xFF00FFFF;
+	else if (mapChip_ == Map_Fragile) {
+		color_ = 0xFF00FFFF;
 	}
-	else if (mapChip == Map_Slip) {
-		color = 0x00FFFFFF;
+	else if (mapChip_ == Map_Slip) {
+		color_ = 0x00FFFFFF;
 	}
-	else if (mapChip == Map_Gool) {
-		color = 0xFFFF0070;
+	else if (mapChip_ == Map_Gool) {
+		color_ = 0xFFFF0070;
 	}
 
 }

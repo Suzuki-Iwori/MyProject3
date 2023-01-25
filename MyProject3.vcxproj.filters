@@ -47,6 +47,12 @@
     <ClCompile Include="Souce\system.cpp">
       <Filter>KamataEngine\MySourse</Filter>
     </ClCompile>
+    <ClCompile Include="Souce\title.cpp">
+      <Filter>KamataEngine\MySourse</Filter>
+    </ClCompile>
+    <ClCompile Include="Souce\sceneManager.cpp">
+      <Filter>KamataEngine\MySourse</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="C:\KamataEngine\DirectXGame\audio\Audio.h">
@@ -134,6 +140,15 @@
       <Filter>KamataEngine\MyHeader</Filter>
     </ClInclude>
     <ClInclude Include="Header\system.h">
+      <Filter>KamataEngine\MyHeader</Filter>
+    </ClInclude>
+    <ClInclude Include="Header\scene.h">
+      <Filter>KamataEngine\MyHeader</Filter>
+    </ClInclude>
+    <ClInclude Include="Header\title.h">
+      <Filter>KamataEngine\MyHeader</Filter>
+    </ClInclude>
+    <ClInclude Include="Header\sceneManager.h">
       <Filter>KamataEngine\MyHeader</Filter>
     </ClInclude>
   </ItemGroup>
