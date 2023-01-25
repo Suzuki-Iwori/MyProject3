@@ -14,6 +14,12 @@
     <Filter Include="KamataEngine\Adapter">
       <UniqueIdentifier>{c6468eb4-788b-4a83-b207-a5f4804e56c5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="KamataEngine\MyHeader">
+      <UniqueIdentifier>{0a01dc58-15ef-4c71-a6da-fe8e5e9db482}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KamataEngine\MySourse">
+      <UniqueIdentifier>{c67b8c19-028b-47b5-a8ff-baae21717b3f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="C:\KamataEngine\DirectXGame\base\DirectXCommon.cpp">
@@ -31,6 +37,15 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="C:\KamataEngine\Adapter\Novice.cpp">
       <Filter>KamataEngine\Adapter</Filter>
+    </ClCompile>
+    <ClCompile Include="Souce\object.cpp">
+      <Filter>KamataEngine\MySourse</Filter>
+    </ClCompile>
+    <ClCompile Include="Souce\stage.cpp">
+      <Filter>KamataEngine\MySourse</Filter>
+    </ClCompile>
+    <ClCompile Include="Souce\system.cpp">
+      <Filter>KamataEngine\MySourse</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -112,8 +127,14 @@
     <ClInclude Include="..\DirectXGame\math\Vector4.h">
       <Filter>KamataEngine\Include</Filter>
     </ClInclude>
-    <ClInclude Include="system.h">
-      <Filter>KamataEngine\Include</Filter>
+    <ClInclude Include="Header\object.h">
+      <Filter>KamataEngine\MyHeader</Filter>
+    </ClInclude>
+    <ClInclude Include="Header\stage.h">
+      <Filter>KamataEngine\MyHeader</Filter>
+    </ClInclude>
+    <ClInclude Include="Header\system.h">
+      <Filter>KamataEngine\MyHeader</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
