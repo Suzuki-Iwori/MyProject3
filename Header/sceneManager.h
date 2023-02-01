@@ -3,9 +3,9 @@
 
 class SceneManager :public Scene {
 private:
-	int OperationScene;
+	int OperationScene; //稼働シーン
 
-	Scene* HaveScene[Scene_Num];
+	Scene* HaveScene[Scene_Num]; //シーン
 
 public:
 	SceneManager();

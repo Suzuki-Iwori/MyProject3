@@ -53,6 +53,9 @@
     <ClCompile Include="Souce\sceneManager.cpp">
       <Filter>KamataEngine\MySourse</Filter>
     </ClCompile>
+    <ClCompile Include="Souce\stageSelect.cpp">
+      <Filter>KamataEngine\MySourse</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="C:\KamataEngine\DirectXGame\audio\Audio.h">
@@ -149,6 +152,9 @@
       <Filter>KamataEngine\MyHeader</Filter>
     </ClInclude>
     <ClInclude Include="Header\sceneManager.h">
+      <Filter>KamataEngine\MyHeader</Filter>
+    </ClInclude>
+    <ClInclude Include="Header\stageSelect.h">
       <Filter>KamataEngine\MyHeader</Filter>
     </ClInclude>
   </ItemGroup>

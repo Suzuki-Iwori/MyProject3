@@ -9,8 +9,8 @@ const int kblockSizeY = 32; //ブロック縦幅
 const int kblockQuantityX = (kworldWidth / kblockSizeX); //ブロック横数
 const int kblockQuantityY = (kworldHeight / kblockSizeY); //ブロック縦数
 const float kgravity = 0.45f; //重力
-const int kenemyNum = 32; //エネミーの最大数
-const float kblastRadius = 124.0f; //爆風の半径
+const int kenemyNum = 24; //エネミーの最大数
+const float kblastRadius = 128.0f; //爆風の半径
 
 enum Direct {
 	Direct_Up,
@@ -217,7 +217,7 @@ private:
 	Vector2 mapChipPosition_; //マップチップとしての座標
 
 public:
-	Map(int x, int y, int map);
+	Map(int x, int y);
 	int GetMapChip();
 	void SetMapChip(int map);
 

@@ -2,19 +2,18 @@
 #include "scene.h"
 #include "title.h"
 #include "stage.h"
+#include "stageSelect.h"
 
 SceneManager::SceneManager() {
 
 	sceneInCount_ = 0;
 	sceneOutCount_ = 0;
 
-	SceneFragReset();
-
 	HaveScene[Scene_Title] = new Title;
-	HaveScene[Scene_Stage1] = new Stage;
-	HaveScene[Scene_GameClear] = new Title;
-	HaveScene[Scene_GameOver] = new Title;
-	HaveScene[Scene_Loading] = new Title;
+	HaveScene[Scene_StageSelect] = new StageSelect;
+	HaveScene[Scene_Stage1] = new Stage(1);
+	HaveScene[Scene_Stage2] = new Stage(2);
+	HaveScene[Scene_Stage3] = new Stage(3);
 
 	OperationScene = Scene_Title;
 
@@ -32,7 +31,9 @@ void SceneManager::Update(const char inputKeys[], const char preInputKeys[]) {
 
 		if (sceneTransition[i]) {
 			OperationScene = i;
+			SceneFragReset();
 			HaveScene[i]->Initialize();
+
 		}
 	}
 }

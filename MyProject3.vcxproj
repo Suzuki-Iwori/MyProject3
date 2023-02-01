@@ -103,6 +103,7 @@
     <ClCompile Include="Souce\object.cpp" />
     <ClCompile Include="Souce\sceneManager.cpp" />
     <ClCompile Include="Souce\stage.cpp" />
+    <ClCompile Include="Souce\stageSelect.cpp" />
     <ClCompile Include="Souce\system.cpp" />
     <ClCompile Include="Souce\title.cpp" />
   </ItemGroup>
@@ -137,6 +138,7 @@
     <ClInclude Include="Header\scene.h" />
     <ClInclude Include="Header\sceneManager.h" />
     <ClInclude Include="Header\stage.h" />
+    <ClInclude Include="Header\stageSelect.h" />
     <ClInclude Include="Header\system.h" />
     <ClInclude Include="Header\title.h" />
   </ItemGroup>

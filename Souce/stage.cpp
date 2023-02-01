@@ -4,7 +4,9 @@
 
 const Vector2 scrollPoint = { float(kscreenWidth / 2.0f),float(kscreenHeight / 2.0f) }; //スクロール点
 
-Stage::Stage() {
+Stage::Stage(int stage) {
+
+	stageNumber = stage;
 
 	Player = new Character;
 	for (int i = 0; i < kenemyNum; i++) {
@@ -13,7 +15,7 @@ Stage::Stage() {
 	for (int i = 0; i < kblockQuantityX; i++) {
 		for (int j = 0; j < kblockQuantityY; j++) {
 
-			MapInfo[j][i] = new Map(i, j, map[j][i]);
+			MapInfo[j][i] = new Map(i, j);
 
 		}
 	}
@@ -26,17 +28,31 @@ Stage::Stage() {
 }
 void Stage::Initialize() {
 
-	SceneFragReset();
+	if (stageNumber == 1) {
+		Player->ResetPlayer(720.0f, 168.0f);
+	}
+	else if (stageNumber == 2) {
+		Player->ResetPlayer(80.0f, 72.0f);
+	}
+	else if (stageNumber == 3) {
+		Player->ResetPlayer(1488.0f, 744.0f);
+	}
 
 	for (int i = 0; i < kblockQuantityX; i++) {
 		for (int j = 0; j < kblockQuantityY; j++) {
 
-			MapInfo[j][i]->SetMapChip(map[j][i]);
+			if (stageNumber == 1) {
+				MapInfo[j][i]->SetMapChip(map1[j][i]);
+			}
+			else if (stageNumber == 2) {
+				MapInfo[j][i]->SetMapChip(map2[j][i]);
+			}
+			else if (stageNumber == 3) {
+				MapInfo[j][i]->SetMapChip(map3[j][i]);
+			}
 
 		}
 	}
-
-	Player->ResetPlayer(722.0f, 168.0f);
 
 	for (int i = 0; i < kenemyNum; i++) {
 		Dust[i]->SetEnemy(float(SetRandom(0, kworldWidth)), float(SetRandom(0, kworldHeight)), 18.0f);
@@ -95,10 +111,10 @@ void Stage::Draw() {
 			if (-scroll.x + MapInfo[j][i]->GetPosition().x > -32.0f && -scroll.x + MapInfo[j][i]->GetPosition().x < kscreenWidth + 32.0f
 				&& -scroll.y + MapInfo[j][i]->GetPosition().y > -32.0f && -scroll.y + MapInfo[j][i]->GetPosition().y < kscreenHeight + 32.0f) {
 
-				if (map[j][i] == Map_Block || map[j][i] == Map_Fragile || map[j][i] == Map_Gool) {
+				if (MapInfo[j][i]->GetMapChip() == Map_Block || MapInfo[j][i]->GetMapChip() == Map_Fragile || MapInfo[j][i]->GetMapChip() == Map_Gool) {
 					Novice::DrawBox(int(-scroll.x + MapInfo[j][i]->GetPosition().x), int(-scroll.y + MapInfo[j][i]->GetPosition().y), kblockSizeX, kblockSizeY, 0.0f, MapInfo[j][i]->GetColor(), kFillModeSolid);
 				}
-				else if (map[j][i] == Map_Slip) {
+				else if (MapInfo[j][i]->GetMapChip() == Map_Slip) {
 					Novice::DrawLine(int(-scroll.x + MapInfo[j][i]->GetPosition().x), int(-scroll.y + MapInfo[j][i]->GetPosition().y),
 						int(-scroll.x + MapInfo[j][i]->GetPosition().x + kblockSizeX), int(-scroll.y + MapInfo[j][i]->GetPosition().y), MapInfo[j][i]->GetColor());
 				}

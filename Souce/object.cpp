@@ -470,27 +470,10 @@ Enemy::~Enemy() {
 
 ///Å´MapÉNÉâÉX
 
-Map::Map(int x, int y, int map) {
+Map::Map(int x, int y) {
 
 	position_ = { float(x) * 32.0f,float(y) * 32.0f };
 	mapChipPosition_ = { float(x),float(y) };
-	mapChip_ = map;
-
-	if (mapChip_ == Map_None) {
-		color_ = 0x00000000;
-	}
-	else if (mapChip_ == Map_Block) {
-		color_ = 0x787878FF;
-	}
-	else if (mapChip_ == Map_Fragile) {
-		color_ = 0xFF00FFFF;
-	}
-	else if (mapChip_ == Map_Slip) {
-		color_ = 0x00FFFFFF;
-	}
-	else if (mapChip_ == Map_Gool) {
-		color_ = 0xFFFF0070;
-	}
 
 }
 int Map::GetMapChip() {

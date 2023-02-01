@@ -10,11 +10,9 @@ Title::Title() {
 	sceneSelect = Title_Start;
 }
 void Title::Initialize() {
-
-	SceneFragReset();
-
 	sceneInCount_ = 60;
 	sceneOutCount_ = 0;
+	sceneSelect = Title_Start;
 }
 //çXêV
 void Title::Update(const char inputKeys[], const char preInputKeys[]) {
@@ -26,7 +24,7 @@ void Title::Update(const char inputKeys[], const char preInputKeys[]) {
 	}
 
 	if (sceneSelect == Title_Start&& inputKeys[DIK_Z] && !preInputKeys[DIK_Z]) {
-		sceneTransition[Scene_Stage1] = true;
+		sceneTransition[Scene_StageSelect] = true;
 	}
 
 }
@@ -37,9 +35,6 @@ void Title::Draw() {
 
 	if (sceneSelect == Title_Start) {
 		Novice::ScreenPrintf(0, 0, "Start");
-	}
-	if (sceneSelect == Title_Continue) {
-		Novice::ScreenPrintf(0, 0, "Continue");
 	}
 	if (sceneSelect == Title_Setting) {
 		Novice::ScreenPrintf(0, 0, "Setting");
